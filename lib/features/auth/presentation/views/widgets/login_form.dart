@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:comaslimpio/features/auth/presentation/providers/login_form_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginForm extends ConsumerStatefulWidget {
   const LoginForm({super.key});
@@ -125,7 +126,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 onPressed: () {
-                  // Navegar a registro
+                  context.go('/register');
                 },
                 child: const Text(
                   'Únete ahora',
