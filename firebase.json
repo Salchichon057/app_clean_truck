@@ -1,0 +1,22 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "comaslimpio-b3930",
+                    "appId": "1:221286547552:android:588d6a19249cb71d324305",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "comaslimpio-b3930",
+                    "configurations": {
+                        "android": "1:221286547552:android:588d6a19249cb71d324305",
+                        "ios": "1:221286547552:ios:05a005f87a3a4315324305"
+                    }
+                }
+            }
+        }
+    }
+}

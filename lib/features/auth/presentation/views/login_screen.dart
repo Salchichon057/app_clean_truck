@@ -1,0 +1,60 @@
+import 'package:comaslimpio/features/auth/presentation/views/widgets/login_form.dart';
+import 'package:flutter/material.dart';
+
+class LoginScreen extends StatelessWidget {
+  const LoginScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Stack(
+          children: [
+            // Fondo degradado
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF41A5DE), Color(0xFF226D9A)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+
+            // Círculos decorativos
+            ..._buildDecorativeCircles(),
+
+            // Tarjeta con LoginForm
+            const Center(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(top: 60, bottom: 24),
+                child: LoginForm(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildDecorativeCircles() {
+    return [
+      Positioned(top: -90, left: -14, child: _circle(200)),
+      Positioned(top: -90, left: -190, child: _circle(290)),
+      Positioned(bottom: -90, right: -14, child: _circle(200)),
+      Positioned(bottom: -90, right: -190, child: _circle(290)),
+    ];
+  }
+
+  Widget _circle(double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        shape: BoxShape.circle,
+      ),
+    );
+  }
+}

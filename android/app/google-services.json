@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "221286547552",
+    "project_id": "comaslimpio-b3930",
+    "storage_bucket": "comaslimpio-b3930.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:221286547552:android:588d6a19249cb71d324305",
+        "android_client_info": {
+          "package_name": "com.cleancomas.comaslimpio"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBlfQpkuzgS4SQ_CVHe4OBAdfdRN7MIuxo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
