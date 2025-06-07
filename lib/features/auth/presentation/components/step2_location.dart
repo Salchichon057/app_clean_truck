@@ -4,14 +4,16 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:comaslimpio/core/models/location.dart';
 import 'package:comaslimpio/core/components/map/map_location_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class Step2Location extends StatelessWidget {
+class Step2Location extends ConsumerWidget {
   final TextEditingController addressController;
   final MapController mapController;
   final bool isDragging;
   final VoidCallback onConfirmLocation;
   final Future<void> Function(Location) onReverseGeocode;
   final MapLocationState mapLocationState;
+  final VoidCallback onOpenAddressModal;
 
   const Step2Location({
     super.key,
@@ -21,17 +23,40 @@ class Step2Location extends StatelessWidget {
     required this.onConfirmLocation,
     required this.onReverseGeocode,
     required this.mapLocationState,
+    required this.onOpenAddressModal,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
         _inputLabel('Dirección'),
         const SizedBox(height: 4),
-        TextField(
-          controller: addressController,
-          decoration: _inputDecoration(hint: 'Ingresa tu dirección'),
+        GestureDetector(
+          onTap: onOpenAddressModal,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    addressController.text.isEmpty
+                        ? 'Toca para agregar una dirección'
+                        : addressController.text,
+                    style: TextStyle(color: Colors.grey[600]),
+                    overflow:
+                        TextOverflow.ellipsis, // Evitar overflow en texto largo
+                  ),
+                ),
+                const Icon(Icons.edit, color: Colors.grey),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 16),
         const Text(
@@ -43,8 +68,10 @@ class Step2Location extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        SizedBox(
-          height: 200,
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: 200, // Limitar altura máxima
+          ),
           child: FutureBuilder<String>(
             future: MapToken.getMapToken(),
             builder: (context, snapshot) {
@@ -56,116 +83,57 @@ class Step2Location extends StatelessWidget {
               }
 
               final mapboxToken = snapshot.data!;
-
-              return FlutterMap(
-                mapController: mapController,
-                options: MapOptions(
-                  initialCenter: mapLocationState.currentLocation != null
-                      ? LatLng(
-                          mapLocationState.currentLocation!.lat,
-                          mapLocationState.currentLocation!.long,
-                        )
-                      : const LatLng(-12.0464, -77.0428),
-                  initialZoom: 15.0,
-                  onMapReady: () {
-                    if (mapLocationState.currentLocation != null) {
-                      mapController.move(
-                        LatLng(
-                          mapLocationState.currentLocation!.lat,
-                          mapLocationState.currentLocation!.long,
-                        ),
-                        15.0,
-                      );
-                      onReverseGeocode(mapLocationState.currentLocation!);
-                    }
-                  },
-                  onPositionChanged: (position, hasGesture) {
-                    if (hasGesture && !isDragging) {
-                      // No hacemos nada mientras se arrastra
-                    }
-                  },
-                  onMapEvent: (event) {
-                    if (event.source == MapEventSource.dragEnd) {
-                      final newLocation = Location(
-                        lat: event.camera.center.latitude,
-                        long: event.camera.center.longitude,
-                      );
-                      onReverseGeocode(newLocation);
-                    }
-                  },
-                ),
+              final initialCenter =
+                  mapLocationState.selectedLocation ??
+                  mapLocationState.currentLocation ??
+                  Location(lat: -12.0464, long: -77.0428);
+              return Stack(
+                alignment: Alignment.center,
                 children: [
-                  TileLayer(
-                    urlTemplate:
-                        'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
-                  ),
-                  MarkerLayer(
-                    markers: [
-                      if (mapLocationState.currentLocation != null)
-                        Marker(
-                          point: LatLng(
-                            mapLocationState.currentLocation!.lat,
-                            mapLocationState.currentLocation!.long,
-                          ),
-                          width: 80,
-                          height: 80,
-                          child: const Icon(
-                            Icons.my_location,
-                            color: Colors.blue,
-                            size: 30,
-                          ),
-                        ),
-                      if (mapLocationState.selectedLocation != null)
-                        Marker(
-                          point: LatLng(
-                            mapLocationState.selectedLocation!.lat,
-                            mapLocationState.selectedLocation!.long,
-                          ),
-                          width: 80,
-                          height: 80,
-                          child: const Icon(
-                            Icons.location_pin,
-                            color: Colors.red,
-                            size: 40,
-                          ),
-                        ),
+                  FlutterMap(
+                    mapController: mapController,
+                    options: MapOptions(
+                      initialCenter: LatLng(
+                        initialCenter.lat,
+                        initialCenter.long,
+                      ),
+                      initialZoom: 17.0, // Más zoom
+                      interactionOptions: InteractionOptions(
+                        flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+                        scrollWheelVelocity: 0.0,
+                        keyboardOptions: const KeyboardOptions(),
+                        cursorKeyboardRotationOptions:
+                            CursorKeyboardRotationOptions.disabled(),
+                      ),
+                      onPositionChanged: (position, hasGesture) {
+                        if (hasGesture) {
+                          final center = position.center;
+                          final newLocation = Location(
+                            lat: center.latitude,
+                            long: center.longitude,
+                          );
+                          ref
+                              .read(mapLocationProvider.notifier)
+                              .updateSelectedLocation(newLocation);
+                          onReverseGeocode(newLocation);
+                        }
+                      },
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
+                      ),
                     ],
                   ),
+                  // Ícono fijo en el centro
+                  const Icon(Icons.location_pin, color: Colors.red, size: 40),
                 ],
               );
             },
           ),
         ),
-        const SizedBox(height: 16),
-        ElevatedButton(
-          onPressed: onConfirmLocation,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF0D3B56),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child: const Text(
-            'Hecho',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ),
       ],
-    );
-  }
-
-  InputDecoration _inputDecoration({required String hint}) {
-    return InputDecoration(
-      hintText: hint,
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
     );
   }
 

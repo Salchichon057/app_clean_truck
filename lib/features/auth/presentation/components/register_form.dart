@@ -36,52 +36,52 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
   bool _obscureConfirmPassword = true;
   List<dynamic> _suggestions = [];
   final MapController _mapController = MapController();
-  final bool _isDragging = false;
   bool _isProgrammaticChange = false;
+  bool _isLocationInitialized = false; // Nueva bandera
 
   @override
   void initState() {
     super.initState();
     _nameController.addListener(() {
+      if (_isProgrammaticChange) return;
       ref.read(registerFormProvider.notifier).updateName(_nameController.text);
     });
     _lastNameController.addListener(() {
+      if (_isProgrammaticChange) return;
       ref
           .read(registerFormProvider.notifier)
           .updateLastName(_lastNameController.text);
     });
     _emailController.addListener(() {
+      if (_isProgrammaticChange) return;
       ref
           .read(registerFormProvider.notifier)
           .updateEmail(_emailController.text);
     });
     _passwordController.addListener(() {
+      if (_isProgrammaticChange) return;
       ref
           .read(registerFormProvider.notifier)
           .updatePassword(_passwordController.text);
     });
     _confirmPasswordController.addListener(() {
+      if (_isProgrammaticChange) return;
       ref
           .read(registerFormProvider.notifier)
           .updateConfirmPassword(_confirmPasswordController.text);
     });
-    _addressController.addListener(() {
-      if (_isProgrammaticChange) return;
-      ref
-          .read(registerFormProvider.notifier)
-          .updateAddress(_addressController.text);
-      final currentAddress = ref.read(registerFormProvider).address ?? '';
-      if (_addressController.text.length > 3 &&
-          _addressController.text != currentAddress) {
-        _fetchSuggestions(_addressController.text);
-        ref.read(registerFormProvider.notifier).toggleSuggestionsModal(true);
-      } else {
-        ref.read(registerFormProvider.notifier).toggleSuggestionsModal(false);
-        setState(() {
-          _suggestions = [];
-        });
-      }
-    });
+
+    // Inicializar ubicación solo la primera vez
+    if (!_isLocationInitialized) {
+      final mapLocationNotifier = ref.read(mapLocationProvider.notifier);
+      mapLocationNotifier.initLocation().then((_) {
+        final mapLocationState = ref.read(mapLocationProvider);
+        if (mapLocationState.currentLocation != null) {
+          _confirmLocation();
+          _isLocationInitialized = true;
+        }
+      });
+    }
   }
 
   @override
@@ -103,16 +103,25 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
     );
     try {
       final response = await http.get(url);
+      if (!mounted) return;
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          _suggestions = data['features'];
+          _suggestions = data['features'] ?? [];
+        });
+      } else {
+        setState(() {
+          _suggestions = [];
         });
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error al buscar sugerencias')),
       );
+      setState(() {
+        _suggestions = [];
+      });
     }
   }
 
@@ -158,6 +167,109 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
         const SnackBar(content: Text('Por favor, selecciona una ubicación')),
       );
     }
+  }
+
+  void _openAddressModal() async {
+    final TextEditingController modalController = TextEditingController();
+    List<dynamic> modalSuggestions = [];
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Buscar Dirección'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: modalController,
+                  decoration: const InputDecoration(
+                    hintText: 'Ingresa una dirección',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) {
+                    if (value.length > 3) {
+                      _fetchSuggestions(value).then((_) {
+                        setState(() {
+                          modalSuggestions = _suggestions;
+                        });
+                      });
+                    } else {
+                      setState(() {
+                        modalSuggestions = [];
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 10),
+                if (modalSuggestions.isNotEmpty)
+                  SizedBox(
+                    height: 200,
+                    width: 300,
+                    child: ListView.builder(
+                      itemCount: modalSuggestions.length,
+                      itemBuilder: (context, index) {
+                        final suggestion = modalSuggestions[index];
+                        return ListTile(
+                          title: Text(suggestion['place_name']),
+                          onTap: () {
+                            modalController.text = suggestion['place_name'];
+                          },
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () {
+                  if (modalController.text.isNotEmpty) {
+                    final coordinates = modalSuggestions.firstWhere(
+                      (s) => s['place_name'] == modalController.text,
+                      orElse: () => null,
+                    )?['center'];
+                    if (coordinates != null) {
+                      final newLocation = Location(
+                        lat: coordinates[1],
+                        long: coordinates[0],
+                      );
+                      ref
+                          .read(mapLocationProvider.notifier)
+                          .updateSelectedLocation(newLocation);
+                      ref
+                          .read(registerFormProvider.notifier)
+                          .updateLocation(newLocation);
+                      _isProgrammaticChange = true;
+                      _addressController.text = modalController.text;
+                      _isProgrammaticChange = false;
+                      ref
+                          .read(mapLocationProvider.notifier)
+                          .updateCurrentAddress(modalController.text);
+                      ref
+                          .read(registerFormProvider.notifier)
+                          .updateAddress(modalController.text);
+                      _mapController.move(
+                        LatLng(newLocation.lat, newLocation.long),
+                        16.0, // Aumentamos zoom
+                      );
+                    }
+                  }
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Seleccionar'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -224,10 +336,11 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
                 Step2Location(
                   addressController: _addressController,
                   mapController: _mapController,
-                  isDragging: _isDragging,
+                  isDragging: false,
                   onConfirmLocation: _confirmLocation,
                   onReverseGeocode: _reverseGeocode,
                   mapLocationState: mapLocationState,
+                  onOpenAddressModal: _openAddressModal,
                 )
               else if (formState.step == 2)
                 Step3Notifications(
@@ -388,83 +501,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
             ],
           ),
         ),
-        if (formState.showSuggestionsModal && _suggestions.isNotEmpty)
-          Positioned(
-            top: 150,
-            left: 24,
-            right: 24,
-            child: Material(
-              elevation: 4,
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                color: Colors.white,
-                child: Column(
-                  children: [
-                    ..._suggestions.map((suggestion) {
-                      return ListTile(
-                        title: Text(suggestion['place_name']),
-                        onTap: () {
-                          final coordinates = suggestion['center'];
-                          final newLocation = Location(
-                            lat: coordinates[1],
-                            long: coordinates[0],
-                          );
-                          ref
-                              .read(mapLocationProvider.notifier)
-                              .updateSelectedLocation(newLocation);
-                          ref
-                              .read(registerFormProvider.notifier)
-                              .updateLocation(newLocation);
-                          _isProgrammaticChange = true;
-                          _addressController.text = suggestion['place_name'];
-                          _isProgrammaticChange = false;
-                          ref
-                              .read(mapLocationProvider.notifier)
-                              .updateCurrentAddress(suggestion['place_name']);
-                          ref
-                              .read(registerFormProvider.notifier)
-                              .toggleSuggestionsModal(false);
-                          _mapController.move(
-                            LatLng(newLocation.lat, newLocation.long),
-                            15.0,
-                          );
-                        },
-                      );
-                    }),
-                    TextButton(
-                      onPressed: () {
-                        ref
-                            .read(registerFormProvider.notifier)
-                            .toggleSuggestionsModal(false);
-                      },
-                      child: const Text(
-                        'Cerrar',
-                        style: TextStyle(color: Color(0xFF226D9A)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
       ],
-    );
-  }
-
-  InputDecoration _inputDecoration({
-    required String hint,
-    String? error,
-    Widget? suffixIcon,
-  }) {
-    return InputDecoration(
-      hintText: hint,
-      filled: true,
-      fillColor: Colors.white,
-      errorText:
-          null, 
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      suffixIcon: suffixIcon,
     );
   }
 }

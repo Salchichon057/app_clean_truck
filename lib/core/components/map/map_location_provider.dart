@@ -28,10 +28,10 @@ class MapLocationState {
 
 class MapLocationNotifier extends StateNotifier<MapLocationState> {
   MapLocationNotifier() : super(MapLocationState()) {
-    _initLocation();
+    initLocation();
   }
 
-  Future<void> _initLocation() async {
+  Future<void> initLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
 
@@ -56,8 +56,7 @@ class MapLocationNotifier extends StateNotifier<MapLocationState> {
 
     LocationSettings locationSettings = const LocationSettings(
       accuracy: LocationAccuracy.high, // Precisión alta
-      distanceFilter:
-          10,
+      distanceFilter: 10,
     );
 
     // Obtener la ubicación actual
