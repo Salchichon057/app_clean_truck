@@ -75,7 +75,9 @@ class LoginFormNotifier extends StateNotifier<LoginFormState> {
 
     try {
       await authNotifier.signIn(email.value, password.value);
-      context.go('/');
+
+      final userRole = authNotifier.state.userRole ?? 'citizen';
+      context.go('/$userRole');
     } catch (e) {
       ScaffoldMessenger.of(
         context,

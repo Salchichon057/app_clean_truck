@@ -7,8 +7,7 @@ enum AuthStatus { checking, unauthenticated, authenticated }
 class GoRouterNotifier extends ChangeNotifier {
   final AuthNotifier _authNotifier;
   AuthStatus _authStatus = AuthStatus.checking;
-  String _userRole =
-      'citizen'; // Valor por defecto, se actualizará desde Firestore
+  String _userRole = 'citizen';
 
   GoRouterNotifier(this._authNotifier) {
     _authNotifier.addListener((state) {

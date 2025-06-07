@@ -1,4 +1,13 @@
+import 'package:comaslimpio/core/presentation/views/main_screen.dart';
+import 'package:comaslimpio/core/presentation/widgets/notifications_screen.dart';
 import 'package:comaslimpio/features/auth/presentation/views/views_screen.dart';
+import 'package:comaslimpio/features/fleet_management/presentation/views/truck_selection_screen.dart';
+import 'package:comaslimpio/features/fleet_management/presentation/views/truck_view_route_screen.dart';
+import 'package:comaslimpio/features/incidents/presentation/views/citizen_home_screen.dart';
+import 'package:comaslimpio/features/incidents/presentation/views/citizen_incident_history_screen.dart';
+import 'package:comaslimpio/features/route_management/presentation/views/admin_add_truck_drivers_screen.dart';
+import 'package:comaslimpio/features/route_management/presentation/views/admin_add_trucks_screen.dart';
+import 'package:comaslimpio/features/route_management/presentation/views/admin_maps_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:comaslimpio/core/presentation/router/app_router_notifier.dart';
@@ -14,16 +23,62 @@ final goRouterProvider = Provider((ref) {
         path: '/splash',
         builder: (context, state) => const CheckAuthStatusScreen(),
       ),
-      GoRoute(
-        path: '/home', // Pantalla inicial "Bienvenido"
-        builder: (context, state) => const HomeScreen(),
-      ),
-      GoRoute(path: '/login', builder: (context, state) => LoginScreen()),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
       ),
-      // Agregar rutas para roles (admin, citizen, truck_driver) más adelante
+      GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+      ShellRoute(
+        builder: (context, state, child) => MainScreen(child: child),
+        routes: [
+          // ! Notifications route
+          GoRoute(
+            path: '/notifications',
+            builder: (context, state) => const NotificationsScreen(),
+          ),
+          // ! Admin routes
+          GoRoute(
+            path: '/admin',
+            builder: (context, state) => const AdminAddTruckDriversScreen(),
+          ),
+
+          GoRoute(
+            path: '/admin/add_truck',
+            builder: (context, state) => const AdminAddTrucksScreen(),
+          ),
+
+          GoRoute(
+            path: '/admin/reports',
+            builder: (context, state) => const AdminMapsScreen(),
+          ),
+
+          GoRoute(
+            path: '/admin/map',
+            builder: (context, state) => const AdminMapsScreen(),
+          ),
+
+          // ! Citizen routes
+          GoRoute(
+            path: '/citizen',
+            builder: (context, state) => const CitizenHomeScreen(),
+          ),
+          GoRoute(
+            path: '/citizen/history',
+            builder: (context, state) => const CitizenIncidentHistoryScreen(),
+          ),
+
+          // ! Truck Driver routes
+          GoRoute(
+            path: '/truck_driver',
+            builder: (context, state) => const TruckSelectionScreen(),
+          ),
+          GoRoute(
+            path: '/truck_driver/map',
+            builder: (context, state) => const TruckViewRouteScreen(),
+          ),
+        ],
+      ),
     ],
     redirect: (context, state) {
       final authStatus = goRouterNotifier.authStatus;
@@ -43,12 +98,11 @@ final goRouterProvider = Provider((ref) {
       }
 
       if (authStatus == AuthStatus.authenticated) {
-        final userRole =
-            goRouterNotifier.userRole; // Obtener rol desde el notificador
+        final userRole = goRouterNotifier.userRole;
         if (isGoingTo == '/login' ||
             isGoingTo == '/register' ||
             isGoingTo == '/splash') {
-          return '/${userRole.toLowerCase()}'; // Redirigir según rol (e.g., /citizen, /admin)
+          return '/$userRole';
         }
       }
 
