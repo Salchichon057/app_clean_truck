@@ -199,6 +199,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
                   onToggleObscureConfirmPassword: () => setState(
                     () => _obscureConfirmPassword = !_obscureConfirmPassword,
                   ),
+                  formState: formState,
                 )
               else if (formState.step == 1)
                 Step2Location(
@@ -265,14 +266,9 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
                     child: ElevatedButton(
                       onPressed: formState.step < 2
                           ? () {
-                              final error = ref
+                              ref
                                   .read(registerFormProvider.notifier)
                                   .nextStep();
-                              if (error != null) {
-                                ScaffoldMessenger.of(
-                                  context,
-                                ).showSnackBar(SnackBar(content: Text(error)));
-                              }
                             }
                           : registerState.isLoading
                           ? null
@@ -280,13 +276,6 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
                               final formState = ref.read(registerFormProvider);
                               if (!formState.isValid ||
                                   formState.location == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Por favor, completa todos los campos correctamente y selecciona una ubicación',
-                                    ),
-                                  ),
-                                );
                                 return;
                               }
                               await ref
@@ -295,7 +284,8 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
                               final updatedFormState = ref.read(
                                 registerFormProvider,
                               );
-                              if (updatedFormState.errorMessage != null) {
+                              if (updatedFormState.errorMessage != null &&
+                                  updatedFormState.errorMessage!.isNotEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(

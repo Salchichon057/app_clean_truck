@@ -1,3 +1,4 @@
+import 'package:comaslimpio/features/auth/presentation/providers/register_form_provider.dart';
 import 'package:flutter/material.dart';
 
 class Step1PersonalInfo extends StatelessWidget {
@@ -10,6 +11,8 @@ class Step1PersonalInfo extends StatelessWidget {
   final bool obscureConfirmPassword;
   final VoidCallback onToggleObscurePassword;
   final VoidCallback onToggleObscureConfirmPassword;
+  // Agregamos para el formState
+  final RegisterFormState formState;
 
   const Step1PersonalInfo({
     super.key,
@@ -22,6 +25,7 @@ class Step1PersonalInfo extends StatelessWidget {
     required this.obscureConfirmPassword,
     required this.onToggleObscurePassword,
     required this.onToggleObscureConfirmPassword,
+    required this.formState,
   });
 
   @override
@@ -34,14 +38,48 @@ class Step1PersonalInfo extends StatelessWidget {
           controller: nameController,
           decoration: _inputDecoration(hint: 'Juan'),
         ),
+        if (formState.name.errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2, left: 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                formState.name.errorMessage!,
+                style: const TextStyle(
+                  color: Color(0xFFD32F2F),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+          ),
+
         const SizedBox(height: 16),
+
         _InputLabel('Apellido'),
         const SizedBox(height: 4),
         TextField(
           controller: lastNameController,
           decoration: _inputDecoration(hint: 'Pérez'),
         ),
+        if (formState.lastName.errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2, left: 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                formState.lastName.errorMessage!,
+                style: const TextStyle(
+                  color: Color(0xFFD32F2F),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+          ),
+
         const SizedBox(height: 16),
+
         _InputLabel('Correo Electrónico'),
         const SizedBox(height: 4),
         TextField(
@@ -49,7 +87,24 @@ class Step1PersonalInfo extends StatelessWidget {
           keyboardType: TextInputType.emailAddress,
           decoration: _inputDecoration(hint: 'juan.perez@example.com'),
         ),
+        if (formState.email.errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2, left: 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                formState.email.errorMessage!,
+                style: const TextStyle(
+                  color: Color(0xFFD32F2F),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+          ),
+
         const SizedBox(height: 16),
+
         _InputLabel('Contraseña'),
         const SizedBox(height: 4),
         TextField(
@@ -65,7 +120,24 @@ class Step1PersonalInfo extends StatelessWidget {
             ),
           ),
         ),
+        if (formState.password.errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2, left: 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                formState.password.errorMessage!,
+                style: const TextStyle(
+                  color: Color(0xFFD32F2F),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+          ),
+
         const SizedBox(height: 16),
+
         _InputLabel('Confirmar Contraseña'),
         const SizedBox(height: 4),
         TextField(
@@ -83,6 +155,21 @@ class Step1PersonalInfo extends StatelessWidget {
             ),
           ),
         ),
+        if (formState.confirmPassword.errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2, left: 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                formState.confirmPassword.errorMessage!,
+                style: const TextStyle(
+                  color: Color(0xFFD32F2F),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
