@@ -36,7 +36,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
   bool _obscureConfirmPassword = true;
   final MapController _mapController = MapController();
   bool _isProgrammaticChange = false;
-  bool _isLocationInitialized = false; // Nueva bandera
+  bool _isLocationInitialized = false;
 
   @override
   void initState() {
@@ -353,7 +353,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                     onPressed: () {
-                      Navigator.of(context).pushReplacementNamed('/login');
+                      context.go('/login');
                     },
                     child: const Text(
                       'Inicia sesión',
