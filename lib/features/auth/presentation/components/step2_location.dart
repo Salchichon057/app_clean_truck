@@ -1,4 +1,5 @@
 import 'package:comaslimpio/core/config/map_token.dart';
+import 'package:comaslimpio/features/auth/presentation/providers/register_form_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -107,6 +108,9 @@ class Step2Location extends ConsumerWidget {
                           ref
                               .read(mapLocationProvider.notifier)
                               .updateSelectedLocation(newLocation);
+                          ref
+                              .read(registerFormProvider.notifier)
+                              .updateLocation(newLocation);
                           onReverseGeocode(newLocation);
                         }
                       },

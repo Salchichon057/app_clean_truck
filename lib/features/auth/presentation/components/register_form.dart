@@ -13,6 +13,7 @@ import 'package:comaslimpio/core/components/map/map_location_provider.dart';
 import 'package:comaslimpio/features/auth/presentation/components/step1_personal_info.dart';
 import 'package:comaslimpio/features/auth/presentation/components/step2_location.dart';
 import 'package:comaslimpio/features/auth/presentation/components/step3_notifications.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -302,10 +303,11 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
                                     ),
                                   ),
                                 );
+                                ref
+                                    .read(registerFormProvider.notifier)
+                                    .clearErrorMessage();
                               } else {
-                                Navigator.of(
-                                  context,
-                                ).pushReplacementNamed('/citizen/map');
+                                context.go('/login');
                               }
                             },
                       style: ElevatedButton.styleFrom(

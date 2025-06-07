@@ -45,6 +45,7 @@ class AuthFirebaseDatasource implements AuthRepository {
 
       if (uid != null) {
         final userMap = AppUserMapper.toJson(appUserData.copyWith(uid: uid));
+        print('Mapa a guardar en Firestore: $userMap');
         await _firestore.collection('app_users').doc(uid).set(userMap);
         return uid;
       }

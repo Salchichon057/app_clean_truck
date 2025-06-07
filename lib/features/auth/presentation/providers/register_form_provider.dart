@@ -210,6 +210,10 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
       );
     }
   }
+
+  void clearErrorMessage() {
+    state = state.copyWith(errorMessage: null);
+  }
 }
 
 final registerFormProvider =

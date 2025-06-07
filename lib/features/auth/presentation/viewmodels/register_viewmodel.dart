@@ -1,5 +1,4 @@
 import 'package:comaslimpio/features/auth/presentation/providers/register_form_provider.dart';
-import 'package:comaslimpio/features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:comaslimpio/features/auth/domain/models/app_user.dart';
@@ -46,19 +45,30 @@ class RegisterViewModel extends StateNotifier<AsyncValue<void>> {
         ),
       );
 
+      print('AppUser a registrar:');
+      print('name: ${appUser.name}');
+      print('email: ${appUser.email}');
+      print('location: ${appUser.location.lat}, ${appUser.location.long}');
+      print('notificaciones: ${appUser.notificationPreferences.toString()}');
+      print('status: ${appUser.status}');
+      print('role: ${appUser.role}');
+      print('createdAt: ${appUser.createdAt}');
+
       await _authRepository.register(
         formState.email.value,
         formState.password.value,
         appUser,
       );
 
-      await _ref
-          .read(authViewModelProvider.notifier)
-          .signIn(formState.email.value, formState.password.value);
+      _ref.read(registerFormProvider.notifier).state = formState.copyWith(
+        errorMessage: null,
+        isSubmitting: false,
+      );
 
       state = const AsyncValue.data(null);
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
+      print('Error al registrar usuario: $e');
       _ref.read(registerFormProvider.notifier).state = formState.copyWith(
         errorMessage: e.toString(),
         isSubmitting: false,
