@@ -57,6 +57,21 @@ class AppTheme {
         filled: true,
         fillColor: white,
       ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: primary,
+        selectedItemColor: tertiary,
+        unselectedItemColor: white,
+        selectedLabelStyle: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 13,
+        ),
+        unselectedLabelStyle: TextStyle(
+          fontWeight: FontWeight.normal,
+          fontSize: 13,
+        ),
+        type: BottomNavigationBarType.fixed,
+        showUnselectedLabels: true,
+      ),
     );
   }
 }

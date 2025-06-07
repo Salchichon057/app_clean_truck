@@ -112,3 +112,13 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
   return AuthNotifier(authRepository);
 });
+
+final currentUserNameProvider = FutureProvider<String?>((ref) async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return null;
+  final doc = await FirebaseFirestore.instance
+      .collection('app_users')
+      .doc(user.uid)
+      .get();
+  return doc.data()?['name'] as String?;
+});

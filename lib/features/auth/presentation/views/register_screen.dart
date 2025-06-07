@@ -1,4 +1,4 @@
-import 'package:comaslimpio/features/auth/presentation/components/register_form.dart';
+import 'package:comaslimpio/features/auth/presentation/views/widgets/register_form.dart';
 import 'package:flutter/material.dart';
 
 class RegisterScreen extends StatelessWidget {

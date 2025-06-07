@@ -94,11 +94,13 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
 
   String? _validateStep() {
     if (state.step == 0) {
-      if (!state.name.isValid) return 'El nombre no es válido';
-      if (!state.lastName.isValid) return 'El apellido no es válido';
-      if (!state.email.isValid) return 'El correo electrónico no es válido';
-      if (!state.password.isValid) return 'La contraseña no es válida';
-      if (!state.confirmPassword.isValid) return 'Las contraseñas no coinciden';
+      if (!state.name.isValid) return state.name.errorMessage;
+      if (!state.lastName.isValid) return state.lastName.errorMessage;
+      if (!state.email.isValid) return state.email.errorMessage;
+      if (!state.password.isValid) return state.password.errorMessage;
+      if (!state.confirmPassword.isValid) {
+        return state.confirmPassword.errorMessage;
+      }
     } else if (state.step == 1) {
       if (state.location == null) return 'Debes seleccionar una ubicación';
     }
@@ -160,11 +162,6 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
   void updateAddress(String address) {
     state = state.copyWith(address: address);
   }
-
-  void toggleSuggestionsModal(bool show) {
-    state = state.copyWith(showSuggestionsModal: show);
-  }
-
   void updateDaytimeAlerts(bool value) {
     state = state.copyWith(daytimeAlerts: value);
   }

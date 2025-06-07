@@ -45,14 +45,14 @@ class RegisterViewModel extends StateNotifier<AsyncValue<void>> {
         ),
       );
 
-      // print('AppUser a registrar:');
-      // print('name: ${appUser.name}');
-      // print('email: ${appUser.email}');
-      // print('location: ${appUser.location.lat}, ${appUser.location.long}');
-      // print('notificaciones: ${appUser.notificationPreferences.toString()}');
-      // print('status: ${appUser.status}');
-      // print('role: ${appUser.role}');
-      // print('createdAt: ${appUser.createdAt}');
+      print('AppUser a registrar:');
+      print('name: ${appUser.name}');
+      print('email: ${appUser.email}');
+      print('location: ${appUser.location.lat}, ${appUser.location.long}');
+      print('notificaciones: ${appUser.notificationPreferences.toString()}');
+      print('status: ${appUser.status}');
+      print('role: ${appUser.role}');
+      print('createdAt: ${appUser.createdAt}');
 
       await _authRepository.register(
         formState.email.value,
@@ -60,15 +60,17 @@ class RegisterViewModel extends StateNotifier<AsyncValue<void>> {
         appUser,
       );
 
-      _ref.read(registerFormProvider.notifier).state = formState.copyWith(
-        errorMessage: null,
-        isSubmitting: false,
-      );
+      // _ref.read(registerFormProvider.notifier).state = formState.copyWith(
+      //   errorMessage: null,
+      //   isSubmitting: false,
+      // );
+
+      _ref.read(registerFormProvider.notifier).state = RegisterFormState();
 
       state = const AsyncValue.data(null);
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
-      // print('Error al registrar usuario: $e');
+      print('Error al registrar usuario: $e');
       _ref.read(registerFormProvider.notifier).state = formState.copyWith(
         errorMessage: e.toString(),
         isSubmitting: false,
