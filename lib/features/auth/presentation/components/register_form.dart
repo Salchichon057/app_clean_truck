@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:comaslimpio/core/models/location.dart';
 import 'package:comaslimpio/core/presentation/theme/app_theme.dart';
 import 'package:comaslimpio/features/auth/presentation/providers/register_form_provider.dart';
@@ -34,7 +33,6 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
   final TextEditingController _addressController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  List<dynamic> _suggestions = [];
   final MapController _mapController = MapController();
   bool _isProgrammaticChange = false;
   bool _isLocationInitialized = false; // Nueva bandera
@@ -44,34 +42,35 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
     super.initState();
     _nameController.addListener(() {
       if (_isProgrammaticChange) return;
-      ref.read(registerFormProvider.notifier).updateName(_nameController.text);
+      ref
+          .read(registerFormProvider.notifier)
+          .updateName(_nameController.text.trim());
     });
     _lastNameController.addListener(() {
       if (_isProgrammaticChange) return;
       ref
           .read(registerFormProvider.notifier)
-          .updateLastName(_lastNameController.text);
+          .updateLastName(_lastNameController.text.trim());
     });
     _emailController.addListener(() {
       if (_isProgrammaticChange) return;
       ref
           .read(registerFormProvider.notifier)
-          .updateEmail(_emailController.text);
+          .updateEmail(_emailController.text.trim());
     });
     _passwordController.addListener(() {
       if (_isProgrammaticChange) return;
       ref
           .read(registerFormProvider.notifier)
-          .updatePassword(_passwordController.text);
+          .updatePassword(_passwordController.text.trim());
     });
     _confirmPasswordController.addListener(() {
       if (_isProgrammaticChange) return;
       ref
           .read(registerFormProvider.notifier)
-          .updateConfirmPassword(_confirmPasswordController.text);
+          .updateConfirmPassword(_confirmPasswordController.text.trim());
     });
 
-    // Inicializar ubicación solo la primera vez
     if (!_isLocationInitialized) {
       final mapLocationNotifier = ref.read(mapLocationProvider.notifier);
       mapLocationNotifier.initLocation().then((_) {
@@ -94,35 +93,6 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
     _addressController.dispose();
     _mapController.dispose();
     super.dispose();
-  }
-
-  Future<void> _fetchSuggestions(String query) async {
-    final mapboxToken = await MapToken.getMapToken();
-    final url = Uri.parse(
-      'https://api.mapbox.com/geocoding/v5/mapbox.places/$query.json?access_token=$mapboxToken&country=PE&language=es&limit=5',
-    );
-    try {
-      final response = await http.get(url);
-      if (!mounted) return;
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          _suggestions = data['features'] ?? [];
-        });
-      } else {
-        setState(() {
-          _suggestions = [];
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al buscar sugerencias')),
-      );
-      setState(() {
-        _suggestions = [];
-      });
-    }
   }
 
   Future<void> _reverseGeocode(Location location) async {
@@ -167,109 +137,6 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
         const SnackBar(content: Text('Por favor, selecciona una ubicación')),
       );
     }
-  }
-
-  void _openAddressModal() async {
-    final TextEditingController modalController = TextEditingController();
-    List<dynamic> modalSuggestions = [];
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('Buscar Dirección'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: modalController,
-                  decoration: const InputDecoration(
-                    hintText: 'Ingresa una dirección',
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (value) {
-                    if (value.length > 3) {
-                      _fetchSuggestions(value).then((_) {
-                        setState(() {
-                          modalSuggestions = _suggestions;
-                        });
-                      });
-                    } else {
-                      setState(() {
-                        modalSuggestions = [];
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 10),
-                if (modalSuggestions.isNotEmpty)
-                  SizedBox(
-                    height: 200,
-                    width: 300,
-                    child: ListView.builder(
-                      itemCount: modalSuggestions.length,
-                      itemBuilder: (context, index) {
-                        final suggestion = modalSuggestions[index];
-                        return ListTile(
-                          title: Text(suggestion['place_name']),
-                          onTap: () {
-                            modalController.text = suggestion['place_name'];
-                          },
-                        );
-                      },
-                    ),
-                  ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Cancelar'),
-              ),
-              TextButton(
-                onPressed: () {
-                  if (modalController.text.isNotEmpty) {
-                    final coordinates = modalSuggestions.firstWhere(
-                      (s) => s['place_name'] == modalController.text,
-                      orElse: () => null,
-                    )?['center'];
-                    if (coordinates != null) {
-                      final newLocation = Location(
-                        lat: coordinates[1],
-                        long: coordinates[0],
-                      );
-                      ref
-                          .read(mapLocationProvider.notifier)
-                          .updateSelectedLocation(newLocation);
-                      ref
-                          .read(registerFormProvider.notifier)
-                          .updateLocation(newLocation);
-                      _isProgrammaticChange = true;
-                      _addressController.text = modalController.text;
-                      _isProgrammaticChange = false;
-                      ref
-                          .read(mapLocationProvider.notifier)
-                          .updateCurrentAddress(modalController.text);
-                      ref
-                          .read(registerFormProvider.notifier)
-                          .updateAddress(modalController.text);
-                      _mapController.move(
-                        LatLng(newLocation.lat, newLocation.long),
-                        16.0, // Aumentamos zoom
-                      );
-                    }
-                  }
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Seleccionar'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
   }
 
   @override
@@ -340,7 +207,6 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
                   onConfirmLocation: _confirmLocation,
                   onReverseGeocode: _reverseGeocode,
                   mapLocationState: mapLocationState,
-                  onOpenAddressModal: _openAddressModal,
                 )
               else if (formState.step == 2)
                 Step3Notifications(

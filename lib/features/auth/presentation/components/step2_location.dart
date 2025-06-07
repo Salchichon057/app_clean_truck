@@ -13,7 +13,6 @@ class Step2Location extends ConsumerWidget {
   final VoidCallback onConfirmLocation;
   final Future<void> Function(Location) onReverseGeocode;
   final MapLocationState mapLocationState;
-  final VoidCallback onOpenAddressModal;
 
   const Step2Location({
     super.key,
@@ -23,7 +22,6 @@ class Step2Location extends ConsumerWidget {
     required this.onConfirmLocation,
     required this.onReverseGeocode,
     required this.mapLocationState,
-    required this.onOpenAddressModal,
   });
 
   @override
@@ -32,30 +30,26 @@ class Step2Location extends ConsumerWidget {
       children: [
         _inputLabel('Dirección'),
         const SizedBox(height: 4),
-        GestureDetector(
-          onTap: onOpenAddressModal,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    addressController.text.isEmpty
-                        ? 'Toca para agregar una dirección'
-                        : addressController.text,
-                    style: TextStyle(color: Colors.grey[600]),
-                    overflow:
-                        TextOverflow.ellipsis, // Evitar overflow en texto largo
-                  ),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  addressController.text.isEmpty
+                      ? 'Mueve el mapa para seleccionar una dirección'
+                      : addressController.text,
+                  style: TextStyle(color: Colors.grey[600]),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const Icon(Icons.edit, color: Colors.grey),
-              ],
-            ),
+              ),
+              const Icon(Icons.location_on, color: Colors.grey),
+            ],
           ),
         ),
         const SizedBox(height: 16),
@@ -69,9 +63,7 @@ class Step2Location extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: 200, // Limitar altura máxima
-          ),
+          constraints: const BoxConstraints(maxHeight: 220),
           child: FutureBuilder<String>(
             future: MapToken.getMapToken(),
             builder: (context, snapshot) {
@@ -97,17 +89,17 @@ class Step2Location extends ConsumerWidget {
                         initialCenter.lat,
                         initialCenter.long,
                       ),
-                      initialZoom: 17.0, // Más zoom
+                      initialZoom: 18,
                       interactionOptions: InteractionOptions(
                         flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
-                        scrollWheelVelocity: 0.0,
+                        scrollWheelVelocity: 0.06,
                         keyboardOptions: const KeyboardOptions(),
                         cursorKeyboardRotationOptions:
                             CursorKeyboardRotationOptions.disabled(),
                       ),
-                      onPositionChanged: (position, hasGesture) {
-                        if (hasGesture) {
-                          final center = position.center;
+                      onMapEvent: (event) {
+                        if (event is MapEventMoveEnd) {
+                          final center = event.camera.center;
                           final newLocation = Location(
                             lat: center.latitude,
                             long: center.longitude,
