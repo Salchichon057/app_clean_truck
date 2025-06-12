@@ -1,4 +1,4 @@
-import 'package:comaslimpio/features/fleet_management/domain/models/truck.dart';
+import 'package:comaslimpio/features/truck_drive/domain/models/truck.dart';
 
 class TruckMapper {
   static Truck fromJson(Map<String, dynamic> json) {

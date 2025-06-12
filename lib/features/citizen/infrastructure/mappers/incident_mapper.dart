@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:comaslimpio/core/models/location.dart';
-import 'package:comaslimpio/features/incidents/domain/models/incident.dart';
+import 'package:comaslimpio/features/citizen/domain/models/incident.dart';
 
 class IncidentMapper {
   static Incident fromJson(Map<String, dynamic> json) {

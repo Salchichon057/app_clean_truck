@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:comaslimpio/core/models/location.dart';
-import 'package:comaslimpio/features/route_management/domain/models/route.dart';
+import 'package:comaslimpio/features/admin/domain/models/route.dart';
 
 class RouteMapper {
   static Route fromJson(Map<String, dynamic> json) {

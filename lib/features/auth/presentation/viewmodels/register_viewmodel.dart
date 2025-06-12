@@ -43,10 +43,12 @@ class RegisterViewModel extends StateNotifier<AsyncValue<void>> {
           nighttimeStart: formState.nighttimeStart,
           nighttimeEnd: formState.nighttimeEnd,
         ),
+        dni: formState.dni.value,
       );
 
       print('AppUser a registrar:');
       print('name: ${appUser.name}');
+      print('dni: ${appUser.dni}');
       print('email: ${appUser.email}');
       print('location: ${appUser.location.lat}, ${appUser.location.long}');
       print('notificaciones: ${appUser.notificationPreferences.toString()}');

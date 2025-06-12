@@ -113,12 +113,12 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(authRepository);
 });
 
-final currentUserNameProvider = FutureProvider<String?>((ref) async {
+final currentUserNameProvider = StreamProvider<String?>((ref) {
   final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return null;
-  final doc = await FirebaseFirestore.instance
+  if (user == null) return Stream.value(null);
+  return FirebaseFirestore.instance
       .collection('app_users')
       .doc(user.uid)
-      .get();
-  return doc.data()?['name'] as String?;
+      .snapshots()
+      .map((doc) => doc.data()?['name'] as String?);
 });

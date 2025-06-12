@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 class Step1PersonalInfo extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController lastNameController;
+  final TextEditingController dniController;
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final TextEditingController confirmPasswordController;
@@ -18,6 +19,7 @@ class Step1PersonalInfo extends StatelessWidget {
     super.key,
     required this.nameController,
     required this.lastNameController,
+    required this.dniController,
     required this.emailController,
     required this.passwordController,
     required this.confirmPasswordController,
@@ -78,6 +80,30 @@ class Step1PersonalInfo extends StatelessWidget {
             ),
           ),
 
+        const SizedBox(height: 16),
+
+        _InputLabel('DNI'),
+        const SizedBox(height: 4),
+        TextField(
+          controller: dniController,
+          keyboardType: TextInputType.number,
+          decoration: _inputDecoration(hint: '12345678'),
+        ),
+        if (formState.dni.errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2, left: 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                formState.dni.errorMessage!,
+                style: const TextStyle(
+                  color: Color(0xFFD32F2F),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+          ),
         const SizedBox(height: 16),
 
         _InputLabel('Correo Electrónico'),
