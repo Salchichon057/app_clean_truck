@@ -22,7 +22,7 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userNameAsync = ref.watch(currentUserNameProvider);
+    final userName = ref.watch(currentUserNameProvider) ?? 'Usuario';
     final userRole = ref.watch(authProvider).userRole;
 
     return AppBar(
@@ -61,19 +61,19 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 onSelected: (value) {
-                  if (value == 'profile') {
-                    context.go('/profile');
-                  } 
-                  // else if (value == 'settings') {
-                  //   context.go('/settings');
-                  // } 
-                  else if (value == 'logout') {
+                  if
+                  // (value == 'profile') {
+                  //   context.go('/profile');
+                  // }
+                  // else if
+                  (value == 'settings') {
+                    context.go('/settings');
+                  } else if (value == 'logout') {
                     ref.read(navigationProvider.notifier).reset();
                     ref.read(authProvider.notifier).signOut();
                   }
                 },
                 itemBuilder: (BuildContext context) {
-                  final userName = userNameAsync.asData?.value ?? 'Usuario';
                   return <PopupMenuEntry<String>>[
                     PopupMenuItem<String>(
                       value: 'profile',
@@ -101,16 +101,16 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
                       ),
                     ),
                     const PopupMenuDivider(),
-                    // const PopupMenuItem<String>(
-                    //   value: 'settings',
-                    //   child: ListTile(
-                    //     leading: Icon(Icons.settings, color: Colors.blueGrey),
-                    //     title: Text(
-                    //       'Configuración',
-                    //       style: TextStyle(color: Colors.black87, fontSize: 14),
-                    //     ),
-                    //   ),
-                    // ),
+                    const PopupMenuItem<String>(
+                      value: 'settings',
+                      child: ListTile(
+                        leading: Icon(Icons.settings, color: Colors.blueGrey),
+                        title: Text(
+                          'Configuración',
+                          style: TextStyle(color: Colors.black87, fontSize: 14),
+                        ),
+                      ),
+                    ),
                     const PopupMenuItem<String>(
                       value: 'logout',
                       child: ListTile(

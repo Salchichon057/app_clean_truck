@@ -1,3 +1,6 @@
+import 'package:comaslimpio/core/config/map_token.dart';
+import 'package:comaslimpio/core/services/geocoding_service.dart';
+import 'package:comaslimpio/features/auth/infrastructure/mappers/app_user_mapper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,13 +21,19 @@ final authStateProvider = StreamProvider<User?>((ref) {
 class AuthState {
   final AuthStatus authStatus;
   final String? userRole;
+  final AppUser? appUser;
 
-  AuthState({required this.authStatus, this.userRole});
+  AuthState({required this.authStatus, this.userRole, this.appUser});
 
-  AuthState copyWith({AuthStatus? authStatus, String? userRole}) {
+  AuthState copyWith({
+    AuthStatus? authStatus,
+    String? userRole,
+    AppUser? appUser,
+  }) {
     return AuthState(
       authStatus: authStatus ?? this.authStatus,
       userRole: userRole ?? this.userRole,
+      appUser: appUser ?? this.appUser,
     );
   }
 }
@@ -46,6 +55,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await _authRepository.signIn(email, password);
       await _fetchUserRole();
+      await _fetchUserData();
     } catch (e) {
       state = state.copyWith(authStatus: AuthStatus.unauthenticated);
       rethrow;
@@ -87,6 +97,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(
       authStatus: AuthStatus.unauthenticated,
       userRole: null,
+      appUser: null,
     );
   }
 
@@ -106,6 +117,33 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
     }
   }
+
+  Future<void> _fetchUserData() async {
+    final user = await _authRepository.getCurrentUser();
+    if (user != null) {
+      final doc = await _firestore.collection('app_users').doc(user.uid).get();
+      if (doc.exists) {
+        final appUser = AppUserMapper.fromJson(doc.data()!);
+        state = state.copyWith(
+          authStatus: AuthStatus.authenticated,
+          userRole: appUser.role,
+          appUser: appUser,
+        );
+      } else {
+        state = state.copyWith(
+          authStatus: AuthStatus.unauthenticated,
+          userRole: null,
+          appUser: null,
+        );
+      }
+    } else {
+      state = state.copyWith(
+        authStatus: AuthStatus.unauthenticated,
+        userRole: null,
+        appUser: null,
+      );
+    }
+  }
 }
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
@@ -113,12 +151,24 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(authRepository);
 });
 
-final currentUserNameProvider = StreamProvider<String?>((ref) {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return Stream.value(null);
-  return FirebaseFirestore.instance
-      .collection('app_users')
-      .doc(user.uid)
-      .snapshots()
-      .map((doc) => doc.data()?['name'] as String?);
+final currentUserNameProvider = Provider<String?>((ref) {
+  final authState = ref.watch(authProvider);
+  return authState.appUser?.name;
+});
+
+final currentUserProvider = Provider<AppUser?>((ref) {
+  final authState = ref.watch(authProvider);
+  return authState.appUser;
+});
+
+final userAddressProvider = FutureProvider<String?>((ref) async {
+  final appUser = ref.watch(currentUserProvider);
+  if (appUser?.location == null) return null;
+
+  final mapboxToken = await MapToken.getMapToken();
+  return await GeocodingService.getAddressFromLatLng(
+    appUser!.location.lat,
+    appUser.location.long,
+    mapboxToken,
+  );
 });

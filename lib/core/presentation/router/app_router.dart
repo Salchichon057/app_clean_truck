@@ -1,3 +1,5 @@
+import 'package:comaslimpio/core/presentation/views/edit_profile.dart';
+import 'package:comaslimpio/core/presentation/views/settings_screen.dart';
 import 'package:comaslimpio/core/presentation/views/main_screen.dart';
 import 'package:comaslimpio/core/presentation/widgets/notifications_screen.dart';
 import 'package:comaslimpio/features/auth/presentation/views/views_screen.dart';
@@ -37,6 +39,17 @@ final goRouterProvider = Provider((ref) {
             path: '/notifications',
             builder: (context, state) => const NotificationsScreen(),
           ),
+          
+          // ! Configuration route
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsScreen(),
+          ),
+
+          GoRoute(path: '/settings/edit-profile',
+            builder: (context, state) => const EditProfile(),
+          ),
+
           // ! Admin routes
           GoRoute(
             path: '/admin',
