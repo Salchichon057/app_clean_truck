@@ -280,21 +280,13 @@ class _LocationPickerEdit extends StatefulWidget {
 class _LocationPickerEditState extends State<_LocationPickerEdit> {
   late MapController _mapController;
   late Location _currentLocation;
+  bool _isDragging = false;
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
     _currentLocation = widget.initialLocation;
-  }
-
-  bool _isValidLocation(Location location) {
-    return location.lat.isFinite &&
-        location.long.isFinite &&
-        !location.lat.isNaN &&
-        !location.long.isNaN &&
-        location.lat.abs() > 0.0001 &&
-        location.long.abs() > 0.0001;
   }
 
   @override
@@ -306,54 +298,55 @@ class _LocationPickerEditState extends State<_LocationPickerEdit> {
           return const Text('No se pudo cargar el mapa');
         }
         final mapboxToken = snapshot.data!;
-        if (!_isValidLocation(_currentLocation)) {
-          return const Text('Ubicación no disponible');
-        }
         return SizedBox(
           height: 200,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: LatLng(
-                  _currentLocation.lat,
-                  _currentLocation.long,
-                ),
-                initialZoom: 17,
-                onMapEvent: (event) {
-                  if (event is MapEventMoveEnd) {
-                    final center = event.camera.center;
-                    final newLoc = Location(
-                      lat: center.latitude,
-                      long: center.longitude,
-                    );
-                    setState(() => _currentLocation = newLoc);
-                    widget.onLocationChanged(newLoc);
-                  }
-                },
-              ),
+            child: Stack(
+              alignment: Alignment.center,
               children: [
-                TileLayer(
-                  urlTemplate:
-                      'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
-                ),
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: LatLng(
-                        _currentLocation.lat,
-                        _currentLocation.long,
-                      ),
-                      width: 40,
-                      height: 40,
-                      child: const Icon(
-                        Icons.location_pin,
-                        color: Colors.red,
-                        size: 40,
-                      ),
+                FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCenter: LatLng(
+                      _currentLocation.lat,
+                      _currentLocation.long,
+                    ),
+                    initialZoom: 17,
+                    onMapEvent: (event) {
+                      if (event is MapEventMoveStart) {
+                        setState(() => _isDragging = true);
+                      }
+                      if (event is MapEventMoveEnd) {
+                        setState(() => _isDragging = false);
+                        final center = event.camera.center;
+                        final newLoc = Location(
+                          lat: center.latitude,
+                          long: center.longitude,
+                        );
+                        setState(() => _currentLocation = newLoc);
+                        widget.onLocationChanged(newLoc);
+                      }
+                    },
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
                     ),
                   ],
+                ),
+                // Pin fijo en el centro
+                IgnorePointer(
+                  child: AnimatedScale(
+                    scale: _isDragging ? 1.2 : 1.0,
+                    duration: const Duration(milliseconds: 150),
+                    child: const Icon(
+                      Icons.location_pin,
+                      color: Colors.red,
+                      size: 40,
+                    ),
+                  ),
                 ),
               ],
             ),
