@@ -55,7 +55,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await _authRepository.signIn(email, password);
       await _fetchUserRole();
-      await _fetchUserData();
+      await fetchUserData();
     } catch (e) {
       state = state.copyWith(authStatus: AuthStatus.unauthenticated);
       rethrow;
@@ -118,7 +118,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> _fetchUserData() async {
+  Future<void> fetchUserData() async {
     final user = await _authRepository.getCurrentUser();
     if (user != null) {
       final doc = await _firestore.collection('app_users').doc(user.uid).get();

@@ -2,10 +2,8 @@
 
 import 'package:comaslimpio/core/inputs/email.dart';
 import 'package:comaslimpio/core/inputs/password.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:formz/formz.dart';
-import 'package:go_router/go_router.dart';
 import 'package:comaslimpio/features/auth/presentation/providers/auth_providers.dart';
 
 class LoginFormState {
@@ -58,7 +56,7 @@ class LoginFormNotifier extends StateNotifier<LoginFormState> {
     );
   }
 
-  Future<void> onFormSubmit(BuildContext context) async {
+  Future<bool> onFormSubmit() async {
     final email = Email.dirty(state.email.value);
     final password = Password.dirty(state.password.value);
 
@@ -69,19 +67,16 @@ class LoginFormNotifier extends StateNotifier<LoginFormState> {
       isValid: email.isValid,
     );
 
-    if (!state.isValid) return;
+    if (!state.isValid) return false;
 
     state = state.copyWith(isPosting: true);
 
     try {
       await authNotifier.signIn(email.value, password.value);
-
-      final userRole = authNotifier.state.userRole ?? 'citizen';
-      context.go('/$userRole');
+      return true;
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al iniciar sesión: $e')));
+      // Puedes guardar el error en el estado si quieres mostrarlo en la UI
+      return false;
     } finally {
       state = state.copyWith(isPosting: false);
     }
