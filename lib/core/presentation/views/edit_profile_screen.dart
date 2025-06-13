@@ -133,7 +133,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             keyboardType: TextInputType.number,
                             maxLength: 8,
                             onChanged: notifier.updateDni,
-                            decoration: _inputDecoration(hint: '12345678'),
+                            decoration: _inputDecoration(hint: 'Ej: 12345678'),
                           ),
                           if (formState.dni.errorMessage != null)
                             _ErrorText(formState.dni.errorMessage!),
@@ -146,7 +146,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             keyboardType: TextInputType.phone,
                             maxLength: 9,
                             onChanged: notifier.updatePhone,
-                            decoration: _inputDecoration(hint: '987654321'),
+                            decoration: _inputDecoration(hint: 'Ej: 987654321'),
                           ),
                           const SizedBox(height: 16),
 
@@ -234,7 +234,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(
-                              icon: const Icon(Icons.save),
                               label: submitState.isLoading
                                   ? const SizedBox(
                                       width: 18,
