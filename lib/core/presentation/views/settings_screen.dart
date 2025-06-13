@@ -5,8 +5,6 @@ import 'package:comaslimpio/features/auth/presentation/providers/auth_providers.
 import 'package:comaslimpio/core/presentation/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 
-// ... imports iguales
-
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 

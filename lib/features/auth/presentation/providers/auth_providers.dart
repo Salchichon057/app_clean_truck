@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:comaslimpio/core/config/map_token.dart';
 import 'package:comaslimpio/core/services/geocoding_service.dart';
 import 'package:comaslimpio/features/auth/infrastructure/mappers/app_user_mapper.dart';
@@ -41,21 +43,51 @@ class AuthState {
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _authRepository;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  late final StreamSubscription<User?> _authSub;
 
   AuthNotifier(this._authRepository)
     : super(AuthState(authStatus: AuthStatus.checking)) {
-    _init();
+    _authSub = _authRepository.authStateChanges.listen((user) async {
+      if (user == null) {
+        state = state.copyWith(
+          authStatus: AuthStatus.unauthenticated,
+          userRole: null,
+          appUser: null,
+        );
+      } else {
+        // Carga el usuario de Firestore
+        final doc = await _firestore
+            .collection('app_users')
+            .doc(user.uid)
+            .get();
+        if (doc.exists) {
+          final appUser = AppUserMapper.fromJson(doc.data()!);
+          state = state.copyWith(
+            authStatus: AuthStatus.authenticated,
+            userRole: appUser.role,
+            appUser: appUser,
+          );
+        } else {
+          state = state.copyWith(
+            authStatus: AuthStatus.unauthenticated,
+            userRole: null,
+            appUser: null,
+          );
+        }
+      }
+    });
   }
 
-  Future<void> _init() async {
-    await _fetchUserRole();
+  @override
+  void dispose() {
+    _authSub.cancel();
+    super.dispose();
   }
 
   Future<void> signIn(String email, String password) async {
     try {
       await _authRepository.signIn(email, password);
-      await _fetchUserRole();
-      await fetchUserData();
+      // El stream se encargará de actualizar el estado
     } catch (e) {
       state = state.copyWith(authStatus: AuthStatus.unauthenticated);
       rethrow;
@@ -85,7 +117,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           ),
         ),
       );
-      await _fetchUserRole();
+      // El stream se encargará de actualizar el estado
     } catch (e) {
       state = state.copyWith(authStatus: AuthStatus.unauthenticated);
       rethrow;
@@ -94,30 +126,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> signOut() async {
     await _authRepository.signOut();
-    state = state.copyWith(
-      authStatus: AuthStatus.unauthenticated,
-      userRole: null,
-      appUser: null,
-    );
+    // El stream se encargará de actualizar el estado
   }
 
-  Future<void> _fetchUserRole() async {
-    final user = await _authRepository.getCurrentUser();
-    if (user != null) {
-      final doc = await _firestore.collection('app_users').doc(user.uid).get();
-      final role = doc.data()?['role'] ?? 'citizen';
-      state = state.copyWith(
-        authStatus: AuthStatus.authenticated,
-        userRole: role,
-      );
-    } else {
-      state = state.copyWith(
-        authStatus: AuthStatus.unauthenticated,
-        userRole: null,
-      );
-    }
-  }
-
+  // Si fetchUserData lo usas en otros lados, puedes dejarlo.
   Future<void> fetchUserData() async {
     final user = await _authRepository.getCurrentUser();
     if (user != null) {
