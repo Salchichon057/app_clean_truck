@@ -8,6 +8,7 @@ class RouteFirebaseDatasource implements RouteRepository {
 
   RouteFirebaseDatasource(this._firestoreService);
 
+  // Métodos Future
   @override
   Future<List<Route>> getAllRoutes() async {
     final docs = await _firestoreService.getDocuments('routes');
@@ -55,5 +56,59 @@ class RouteFirebaseDatasource implements RouteRepository {
   @override
   Future<void> deleteRoute(String id) async {
     await _firestoreService.collection('routes').doc(id).delete();
+  }
+
+  // Métodos Stream
+  @override
+  Stream<List<Route>> watchAllRoutes() {
+    return _firestoreService
+        .streamCollection('routes')
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) =>
+                    RouteMapper.fromJson(doc.data() as Map<String, dynamic>),
+              )
+              .toList(),
+        );
+  }
+
+  @override
+  Stream<List<Route>> watchRoutesByTruckDriver(String truckDriverId) {
+    return _firestoreService
+        .streamCollectionWhere('routes', 'id_truck_drivers', truckDriverId)
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) =>
+                    RouteMapper.fromJson(doc.data() as Map<String, dynamic>),
+              )
+              .toList(),
+        );
+  }
+
+  @override
+  Stream<List<Route>> watchActiveRoutes() {
+    return _firestoreService
+        .streamCollectionWhere('routes', 'status', 'active')
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) =>
+                    RouteMapper.fromJson(doc.data() as Map<String, dynamic>),
+              )
+              .toList(),
+        );
+  }
+
+  @override
+  Stream<Route?> watchRouteById(String id) {
+    return _firestoreService
+        .streamDocument('routes', id)
+        .map(
+          (doc) => doc.exists
+              ? RouteMapper.fromJson(doc.data() as Map<String, dynamic>)
+              : null,
+        );
   }
 }
