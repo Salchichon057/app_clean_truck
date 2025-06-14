@@ -196,7 +196,7 @@ class _LocationSelectorState extends ConsumerState<_LocationSelector> {
   Future<void> _showLocationEditModal(BuildContext context) async {
     final formState = ref.read(reportIncidentFormProvider);
     final notifier = ref.read(reportIncidentFormProvider.notifier);
-    final user = ref.read(currentUserProvider); // <--- CORREGIDO
+    final user = ref.read(currentUserProvider);
 
     final userHomeLocation = user?.location;
 
@@ -278,6 +278,7 @@ class _IncidentLocationEditModalState extends State<IncidentLocationEditModal> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       elevation: 12,
       child: Container(
@@ -299,10 +300,6 @@ class _IncidentLocationEditModalState extends State<IncidentLocationEditModal> {
                       color: AppTheme.primary,
                     ),
                   ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close),
                 ),
               ],
             ),
