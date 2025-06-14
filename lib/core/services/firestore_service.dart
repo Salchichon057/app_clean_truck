@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore;
@@ -80,3 +81,12 @@ class FirestoreService {
     return _firestore.collection(collectionPath).snapshots();
   }
 }
+
+final firestoreProvider = Provider<FirebaseFirestore>((ref) {
+  return FirebaseFirestore.instance;
+});
+
+final firestoreServiceProvider = Provider<FirestoreService>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+  return FirestoreService(firestore);
+});

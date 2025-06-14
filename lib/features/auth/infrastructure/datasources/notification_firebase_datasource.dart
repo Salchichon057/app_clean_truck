@@ -1,17 +1,20 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:comaslimpio/core/services/firestore_service.dart';
 import '../../domain/models/notification.dart';
 import '../../domain/repositories/notification_repository.dart';
 import '../mappers/notification_mapper.dart';
 
 class NotificationFirebaseDatasource implements NotificationRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirestoreService _firestoreService;
+
+  NotificationFirebaseDatasource(this._firestoreService);
 
   @override
   Future<List<Notification>> getNotificationsForUser(String userId) async {
-    final snapshot = await _firestore
+    final snapshot = await _firestoreService
         .collection('app_users')
         .doc(userId)
         .collection('notifications')
+        .orderBy('timestamp', descending: true)
         .get();
     return snapshot.docs
         .map((doc) => NotificationMapper.fromJson(doc.data()))
@@ -20,7 +23,7 @@ class NotificationFirebaseDatasource implements NotificationRepository {
 
   @override
   Future<void> addNotification(String userId, Notification notification) async {
-    await _firestore
+    await _firestoreService
         .collection('app_users')
         .doc(userId)
         .collection('notifications')
@@ -32,7 +35,7 @@ class NotificationFirebaseDatasource implements NotificationRepository {
     String userId,
     String notificationId,
   ) async {
-    await _firestore
+    await _firestoreService
         .collection('app_users')
         .doc(userId)
         .collection('notifications')

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:comaslimpio/core/models/location.dart';
 
 class Route {
@@ -5,7 +6,7 @@ class Route {
   final String idTruckDrivers;
   final List<Location> points;
   final String status;
-  final DateTime date;
+  final Timestamp date;
 
   Route({
     required this.uid,
@@ -14,4 +15,20 @@ class Route {
     required this.status,
     required this.date,
   });
+
+  Route copyWith({
+    String? uid,
+    String? idTruckDrivers,
+    List<Location>? points,
+    String? status,
+    Timestamp? date,
+  }) {
+    return Route(
+      uid: uid ?? this.uid,
+      idTruckDrivers: idTruckDrivers ?? this.idTruckDrivers,
+      points: points ?? this.points,
+      status: status ?? this.status,
+      date: date ?? this.date,
+    );
+  }
 }

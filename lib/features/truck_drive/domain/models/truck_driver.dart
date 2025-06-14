@@ -8,4 +8,12 @@ class TruckDriver {
     required this.idTruck,
     required this.uidUsers,
   });
+
+  TruckDriver copyWith({String? uid, String? idTruck, String? uidUsers}) {
+    return TruckDriver(
+      uid: uid ?? this.uid,
+      idTruck: idTruck ?? this.idTruck,
+      uidUsers: uidUsers ?? this.uidUsers,
+    );
+  }
 }

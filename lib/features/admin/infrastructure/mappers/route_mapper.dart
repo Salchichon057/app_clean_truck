@@ -7,11 +7,11 @@ class RouteMapper {
     return Route(
       uid: json['uid'],
       idTruckDrivers: json['id_truck_drivers'],
-      points: (json['points'] as List<dynamic>)
+      points: (json['points'] as List)
           .map((point) => Location.fromJson(point))
           .toList(),
       status: json['status'],
-      date: (json['date'] as Timestamp).toDate(),
+      date: (json['date'] as Timestamp),
     );
   }
 
