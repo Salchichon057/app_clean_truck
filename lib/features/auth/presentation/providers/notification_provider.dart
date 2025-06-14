@@ -2,7 +2,6 @@ import 'package:comaslimpio/features/auth/domain/models/notification.dart';
 import 'package:comaslimpio/features/auth/presentation/viewmodels/notification_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:comaslimpio/core/services/firestore_service.dart';
-import 'package:comaslimpio/features/auth/presentation/providers/auth_providers.dart';
 import '../../infrastructure/datasources/notification_firebase_datasource.dart';
 import '../../domain/repositories/notification_repository.dart';
 
@@ -17,19 +16,29 @@ final notificationViewModelProvider =
       return NotificationViewModel(repo);
     });
 
-// Provider para obtener notificaciones del usuario actual
-final userNotificationsProvider = FutureProvider<List<Notification>>((
+// Stream Providers
+final notificationsStreamProvider =
+    StreamProvider.family<List<Notification>, String>((ref, userId) {
+      final repo = ref.watch(notificationRepositoryProvider);
+      return repo.watchNotificationsForUser(userId);
+    });
+
+final unreadNotificationsStreamProvider =
+    StreamProvider.family<List<Notification>, String>((ref, userId) {
+      final repo = ref.watch(notificationRepositoryProvider);
+      return repo.watchUnreadNotificationsForUser(userId);
+    });
+
+final unreadNotificationsCountProvider = StreamProvider.family<int, String>((
   ref,
-) async {
-  final user = ref.watch(currentUserProvider);
-  if (user == null) return [];
-
-  final repo = ref.watch(notificationRepositoryProvider);
-  return repo.getNotificationsForUser(user.uid);
-});
-
-// Provider para contar notificaciones no leídas
-final unreadNotificationsCountProvider = Provider<int>((ref) {
-  final notificationState = ref.watch(notificationViewModelProvider);
-  return notificationState.unreadCount;
+  userId,
+) {
+  final unreadNotifications = ref.watch(
+    unreadNotificationsStreamProvider(userId),
+  );
+  return unreadNotifications.when(
+    data: (notifications) => Stream.value(notifications.length),
+    loading: () => Stream.value(0),
+    error: (_, __) => Stream.value(0),
+  );
 });
