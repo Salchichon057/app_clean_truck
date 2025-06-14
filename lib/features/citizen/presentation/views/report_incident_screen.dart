@@ -2,6 +2,7 @@ import 'package:comaslimpio/core/config/map_token.dart';
 import 'package:comaslimpio/core/models/location.dart';
 import 'package:comaslimpio/core/presentation/theme/app_theme.dart';
 import 'package:comaslimpio/core/presentation/widgets/location_map_preview.dart';
+import 'package:comaslimpio/features/auth/presentation/providers/auth_providers.dart';
 import 'package:comaslimpio/features/citizen/presentation/providers/report_incident_form_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -55,8 +56,15 @@ class _ReportIncidentFormState extends ConsumerState<_ReportIncidentForm> {
 
     return Stack(
       children: [
-        // Fondo degradado
+        // Fondo degradado (puedes personalizar los colores)
         Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFe0f7fa), Color(0xFFffffff)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
         ),
         Center(
           child: SingleChildScrollView(
@@ -67,7 +75,7 @@ class _ReportIncidentFormState extends ConsumerState<_ReportIncidentForm> {
                 borderRadius: BorderRadius.circular(10),
               ),
               color: Colors.white,
-              shadowColor: Colors.black.withValues(alpha: 0.1),
+              shadowColor: Colors.black.withValues(alpha:  0.1),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -188,13 +196,15 @@ class _LocationSelectorState extends ConsumerState<_LocationSelector> {
   Future<void> _showLocationEditModal(BuildContext context) async {
     final formState = ref.read(reportIncidentFormProvider);
     final notifier = ref.read(reportIncidentFormProvider.notifier);
+    final user = ref.read(currentUserProvider); // <--- CORREGIDO
+
+    final userHomeLocation = user?.location;
 
     final result = await showDialog<Location>(
       context: context,
       builder: (context) => IncidentLocationEditModal(
-        initialLocation: formState.incidentLocation,
-        // Puedes pasar la ubicación de la casa del usuario aquí si la tienes
-        // userHomeLocation: ...
+        initialLocation: formState.incidentLocation ?? userHomeLocation,
+        userHomeLocation: userHomeLocation,
       ),
     );
 
@@ -237,12 +247,12 @@ class _LocationSelectorState extends ConsumerState<_LocationSelector> {
 
 class IncidentLocationEditModal extends StatefulWidget {
   final Location? initialLocation;
-  // final Location? userHomeLocation; // Si quieres mostrar la casa del usuario
+  final Location? userHomeLocation;
 
   const IncidentLocationEditModal({
     super.key,
     this.initialLocation,
-    // this.userHomeLocation,
+    this.userHomeLocation,
   });
 
   @override
@@ -261,6 +271,7 @@ class _IncidentLocationEditModalState extends State<IncidentLocationEditModal> {
     _mapController = MapController();
     _selectedLocation =
         widget.initialLocation ??
+        widget.userHomeLocation ??
         Location(lat: -12.0464, long: -77.0428); // Lima por defecto
   }
 
@@ -343,40 +354,27 @@ class _IncidentLocationEditModalState extends State<IncidentLocationEditModal> {
                               urlTemplate:
                                   'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
                             ),
-                            MarkerLayer(
-                              markers: [
-                                Marker(
-                                  point: LatLng(
-                                    _selectedLocation.lat,
-                                    _selectedLocation.long,
+                            if (widget.userHomeLocation != null)
+                              MarkerLayer(
+                                markers: [
+                                  Marker(
+                                    point: LatLng(
+                                      widget.userHomeLocation!.lat,
+                                      widget.userHomeLocation!.long,
+                                    ),
+                                    width: 36,
+                                    height: 36,
+                                    child: const Icon(
+                                      Icons.home,
+                                      color: Colors.blue,
+                                      size: 36,
+                                    ),
                                   ),
-                                  width: 44,
-                                  height: 44,
-                                  child: const Icon(
-                                    Icons.location_pin,
-                                    color: Colors.red,
-                                    size: 44,
-                                  ),
-                                ),
-                                // Si quieres mostrar la casa del usuario:
-                                // if (widget.userHomeLocation != null)
-                                //   Marker(
-                                //     point: LatLng(
-                                //       widget.userHomeLocation!.lat,
-                                //       widget.userHomeLocation!.long,
-                                //     ),
-                                //     width: 36,
-                                //     height: 36,
-                                //     child: const Icon(
-                                //       Icons.home,
-                                //       color: Colors.blue,
-                                //       size: 36,
-                                //     ),
-                                //   ),
-                              ],
-                            ),
+                                ],
+                              ),
                           ],
                         ),
+                        // Pin fijo en el centro
                         IgnorePointer(
                           child: AnimatedScale(
                             scale: _isDragging ? 1.2 : 1.0,
