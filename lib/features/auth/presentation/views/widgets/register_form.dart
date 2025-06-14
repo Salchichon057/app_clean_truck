@@ -32,6 +32,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _dniController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   final MapController _mapController = MapController();
@@ -52,6 +53,12 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
       ref
           .read(registerFormProvider.notifier)
           .updateLastName(_lastNameController.text.trim());
+    });
+    _dniController.addListener(() {
+      if (_isProgrammaticChange) return;
+      ref
+          .read(registerFormProvider.notifier)
+          .updateDni(_dniController.text.trim());
     });
     _emailController.addListener(() {
       if (_isProgrammaticChange) return;
@@ -88,6 +95,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
   void dispose() {
     _nameController.dispose();
     _lastNameController.dispose();
+    _dniController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -189,6 +197,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
                 Step1PersonalInfo(
                   nameController: _nameController,
                   lastNameController: _lastNameController,
+                  dniController: _dniController,
                   emailController: _emailController,
                   passwordController: _passwordController,
                   confirmPasswordController: _confirmPasswordController,

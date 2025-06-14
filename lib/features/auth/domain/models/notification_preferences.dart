@@ -26,10 +26,18 @@ class NotificationPreferences {
     return NotificationPreferences(
       daytimeAlerts: daytimeAlerts ?? this.daytimeAlerts,
       nighttimeAlerts: nighttimeAlerts ?? this.nighttimeAlerts,
-      daytimeStart: daytimeStart ?? this.daytimeStart,
-      daytimeEnd: daytimeEnd ?? this.daytimeEnd,
-      nighttimeStart: nighttimeStart ?? this.nighttimeStart,
-      nighttimeEnd: nighttimeEnd ?? this.nighttimeEnd,
+      daytimeStart: daytimeAlerts == false
+          ? this.daytimeStart
+          : (daytimeStart ?? this.daytimeStart),
+      daytimeEnd: daytimeAlerts == false
+          ? this.daytimeEnd
+          : (daytimeEnd ?? this.daytimeEnd),
+      nighttimeStart: nighttimeAlerts == false
+          ? this.nighttimeStart
+          : (nighttimeStart ?? this.nighttimeStart),
+      nighttimeEnd: nighttimeAlerts == false
+          ? this.nighttimeEnd
+          : (nighttimeEnd ?? this.nighttimeEnd),
     );
   }
 }

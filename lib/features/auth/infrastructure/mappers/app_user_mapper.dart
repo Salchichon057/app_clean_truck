@@ -17,6 +17,7 @@ class AppUserMapper {
       notificationPreferences: NotificationPreferencesMapper.fromJson(
         json['notification_preferences'],
       ),
+      dni: json['dni']
     );
   }
 
@@ -33,6 +34,7 @@ class AppUserMapper {
       'notification_preferences': NotificationPreferencesMapper.toJson(
         user.notificationPreferences,
       ),
+      'dni': user.dni
     };
   }
 }

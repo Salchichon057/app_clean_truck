@@ -54,4 +54,14 @@ class AuthFirebaseDatasource implements AuthRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<void> updateUserProfile(AppUser user) async {
+    try {
+      final userMap = AppUserMapper.toJson(user);
+      await _firestore.collection('app_users').doc(user.uid).update(userMap);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

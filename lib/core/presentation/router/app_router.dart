@@ -1,13 +1,16 @@
+import 'package:comaslimpio/core/presentation/views/edit_profile_screen.dart';
+import 'package:comaslimpio/core/presentation/views/settings_screen.dart';
 import 'package:comaslimpio/core/presentation/views/main_screen.dart';
 import 'package:comaslimpio/core/presentation/widgets/notifications_screen.dart';
 import 'package:comaslimpio/features/auth/presentation/views/views_screen.dart';
-import 'package:comaslimpio/features/fleet_management/presentation/views/truck_selection_screen.dart';
-import 'package:comaslimpio/features/fleet_management/presentation/views/truck_view_route_screen.dart';
-import 'package:comaslimpio/features/incidents/presentation/views/citizen_home_screen.dart';
-import 'package:comaslimpio/features/incidents/presentation/views/citizen_incident_history_screen.dart';
-import 'package:comaslimpio/features/route_management/presentation/views/admin_add_truck_drivers_screen.dart';
-import 'package:comaslimpio/features/route_management/presentation/views/admin_add_trucks_screen.dart';
-import 'package:comaslimpio/features/route_management/presentation/views/admin_maps_screen.dart';
+import 'package:comaslimpio/features/citizen/presentation/views/report_incident_screen.dart';
+import 'package:comaslimpio/features/truck_drive/presentation/views/truck_selection_screen.dart';
+import 'package:comaslimpio/features/truck_drive/presentation/views/truck_view_route_screen.dart';
+import 'package:comaslimpio/features/citizen/presentation/views/citizen_home_screen.dart';
+import 'package:comaslimpio/features/citizen/presentation/views/citizen_incident_history_screen.dart';
+import 'package:comaslimpio/features/admin/presentation/views/admin_add_truck_drivers_screen.dart';
+import 'package:comaslimpio/features/admin/presentation/views/admin_add_trucks_screen.dart';
+import 'package:comaslimpio/features/admin/presentation/views/admin_maps_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:comaslimpio/core/presentation/router/app_router_notifier.dart';
@@ -37,6 +40,17 @@ final goRouterProvider = Provider((ref) {
             path: '/notifications',
             builder: (context, state) => const NotificationsScreen(),
           ),
+          
+          // ! Configuration route
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsScreen(),
+          ),
+
+          GoRoute(path: '/settings/edit-profile',
+            builder: (context, state) => const EditProfileScreen(),
+          ),
+
           // ! Admin routes
           GoRoute(
             path: '/admin',
@@ -66,6 +80,10 @@ final goRouterProvider = Provider((ref) {
           GoRoute(
             path: '/citizen/history',
             builder: (context, state) => const CitizenIncidentHistoryScreen(),
+          ),
+
+          GoRoute(path: '/report-incident',
+            builder: (context, state) => const ReportIncidentScreen(),
           ),
 
           // ! Truck Driver routes

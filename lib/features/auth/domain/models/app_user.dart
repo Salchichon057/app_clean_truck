@@ -1,12 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:comaslimpio/core/models/location.dart';
-import 'notification_preferences.dart';
+import 'package:comaslimpio/features/auth/domain/models/notification_preferences.dart';
 
 class AppUser {
   final String uid;
   final String name;
   final String email;
   final String phoneNumber;
+  final String dni;
   final String role;
   final Location location;
   final String status;
@@ -18,6 +19,7 @@ class AppUser {
     required this.name,
     required this.email,
     required this.phoneNumber,
+    required this.dni,
     required this.role,
     required this.location,
     required this.status,
@@ -30,6 +32,7 @@ class AppUser {
     String? name,
     String? email,
     String? phoneNumber,
+    String? dni,
     String? role,
     Location? location,
     String? status,
@@ -41,6 +44,7 @@ class AppUser {
       name: name ?? this.name,
       email: email ?? this.email,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      dni: dni ?? this.dni,
       role: role ?? this.role,
       location: location ?? this.location,
       status: status ?? this.status,

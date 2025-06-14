@@ -7,4 +7,5 @@ abstract class AuthRepository {
   Stream<User?> get authStateChanges;
   Future<User?> getCurrentUser();
   Future<String?> register(String email, String password, AppUser appUserData);
+  Future<void> updateUserProfile(AppUser user);
 }

@@ -1,4 +1,5 @@
 import 'package:comaslimpio/core/inputs/confirm_password.dart';
+import 'package:comaslimpio/core/inputs/dni.dart';
 import 'package:comaslimpio/core/inputs/email.dart';
 import 'package:comaslimpio/core/inputs/full_name.dart';
 import 'package:comaslimpio/core/inputs/password.dart';
@@ -9,6 +10,7 @@ class RegisterFormState {
   final FullName name;
   final FullName lastName;
   final Email email;
+  final Dni dni;
   final Password password;
   final ConfirmPassword confirmPassword;
   final Location? location;
@@ -28,6 +30,7 @@ class RegisterFormState {
   RegisterFormState({
     this.name = const FullName.pure(),
     this.lastName = const FullName.pure(),
+    this.dni = const Dni.pure(),
     this.email = const Email.pure(),
     this.password = const Password.pure(),
     this.confirmPassword = const ConfirmPassword.pure(),
@@ -49,6 +52,7 @@ class RegisterFormState {
   RegisterFormState copyWith({
     FullName? name,
     FullName? lastName,
+    Dni? dni,
     Email? email,
     Password? password,
     ConfirmPassword? confirmPassword,
@@ -69,6 +73,7 @@ class RegisterFormState {
     return RegisterFormState(
       name: name ?? this.name,
       lastName: lastName ?? this.lastName,
+      dni: dni ?? this.dni,
       email: email ?? this.email,
       password: password ?? this.password,
       confirmPassword: confirmPassword ?? this.confirmPassword,
@@ -96,6 +101,7 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
     if (state.step == 0) {
       if (!state.name.isValid) return state.name.errorMessage;
       if (!state.lastName.isValid) return state.lastName.errorMessage;
+      if (!state.dni.isValid) return state.dni.errorMessage;
       if (!state.email.isValid) return state.email.errorMessage;
       if (!state.password.isValid) return state.password.errorMessage;
       if (!state.confirmPassword.isValid) {
@@ -110,6 +116,7 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
   bool _isFormValid() {
     return state.name.isValid &&
         state.lastName.isValid &&
+        state.dni.isValid &&
         state.email.isValid &&
         state.password.isValid &&
         state.confirmPassword.isValid &&
@@ -124,6 +131,11 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
   void updateLastName(String value) {
     final lastName = FullName.dirty(value);
     state = state.copyWith(lastName: lastName, isValid: _isFormValid());
+  }
+
+  void updateDni(String value) {
+    final dni = Dni.dirty(value);
+    state = state.copyWith(dni: dni, isValid: _isFormValid());
   }
 
   void updateEmail(String value) {
@@ -162,6 +174,7 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
   void updateAddress(String address) {
     state = state.copyWith(address: address);
   }
+
   void updateDaytimeAlerts(bool value) {
     state = state.copyWith(daytimeAlerts: value);
   }
