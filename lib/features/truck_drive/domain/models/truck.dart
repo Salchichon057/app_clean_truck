@@ -20,4 +20,28 @@ class Truck {
     required this.vehicleType,
     required this.status,
   });
+
+  Truck copyWith({
+    String? idTruck,
+    String? brand,
+    String? model,
+    int? yearOfManufacture,
+    String? serialNumber,
+    String? color,
+    String? engineNumber,
+    String? vehicleType,
+    String? status,
+  }) {
+    return Truck(
+      idTruck: idTruck ?? this.idTruck,
+      brand: brand ?? this.brand,
+      model: model ?? this.model,
+      yearOfManufacture: yearOfManufacture ?? this.yearOfManufacture,
+      serialNumber: serialNumber ?? this.serialNumber,
+      color: color ?? this.color,
+      engineNumber: engineNumber ?? this.engineNumber,
+      vehicleType: vehicleType ?? this.vehicleType,
+      status: status ?? this.status,
+    );
+  }
 }

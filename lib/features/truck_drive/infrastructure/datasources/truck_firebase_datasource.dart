@@ -8,6 +8,7 @@ class TruckFirebaseDatasource implements TruckRepository {
 
   TruckFirebaseDatasource(this._firestoreService);
 
+  // Métodos Future
   @override
   Future<List<Truck>> getAllTrucks() async {
     final docs = await _firestoreService.getDocuments('trucks');
@@ -44,5 +45,45 @@ class TruckFirebaseDatasource implements TruckRepository {
   @override
   Future<void> deleteTruck(String id) async {
     await _firestoreService.collection('trucks').doc(id).delete();
+  }
+
+  // Métodos Stream
+  @override
+  Stream<List<Truck>> watchAllTrucks() {
+    return _firestoreService
+        .streamCollection('trucks')
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) =>
+                    TruckMapper.fromJson(doc.data() as Map<String, dynamic>),
+              )
+              .toList(),
+        );
+  }
+
+  @override
+  Stream<List<Truck>> watchTrucksByStatus(String status) {
+    return _firestoreService
+        .streamCollectionWhere('trucks', 'status', status)
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) =>
+                    TruckMapper.fromJson(doc.data() as Map<String, dynamic>),
+              )
+              .toList(),
+        );
+  }
+
+  @override
+  Stream<Truck?> watchTruckById(String id) {
+    return _firestoreService
+        .streamDocument('trucks', id)
+        .map(
+          (doc) => doc.exists
+              ? TruckMapper.fromJson(doc.data() as Map<String, dynamic>)
+              : null,
+        );
   }
 }
