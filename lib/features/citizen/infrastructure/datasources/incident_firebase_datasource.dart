@@ -8,6 +8,7 @@ class IncidentFirebaseDatasource implements IncidentRepository {
 
   IncidentFirebaseDatasource(this._firestoreService);
 
+  // Métodos Future
   @override
   Future<List<Incident>> getAllIncidents() async {
     final docs = await _firestoreService.getDocuments('incidents');
@@ -59,5 +60,59 @@ class IncidentFirebaseDatasource implements IncidentRepository {
   @override
   Future<void> deleteIncident(String id) async {
     await _firestoreService.collection('incidents').doc(id).delete();
+  }
+
+  // Métodos Stream
+  @override
+  Stream<List<Incident>> watchAllIncidents() {
+    return _firestoreService
+        .streamCollection('incidents')
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) =>
+                    IncidentMapper.fromJson(doc.data() as Map<String, dynamic>),
+              )
+              .toList(),
+        );
+  }
+
+  @override
+  Stream<List<Incident>> watchIncidentsByUser(String userId) {
+    return _firestoreService
+        .streamCollectionWhere('incidents', 'id_users', userId)
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) =>
+                    IncidentMapper.fromJson(doc.data() as Map<String, dynamic>),
+              )
+              .toList(),
+        );
+  }
+
+  @override
+  Stream<List<Incident>> watchIncidentsByStatus(String status) {
+    return _firestoreService
+        .streamCollectionWhere('incidents', 'status', status)
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) =>
+                    IncidentMapper.fromJson(doc.data() as Map<String, dynamic>),
+              )
+              .toList(),
+        );
+  }
+
+  @override
+  Stream<Incident?> watchIncidentById(String id) {
+    return _firestoreService
+        .streamDocument('incidents', id)
+        .map(
+          (doc) => doc.exists
+              ? IncidentMapper.fromJson(doc.data() as Map<String, dynamic>)
+              : null,
+        );
   }
 }

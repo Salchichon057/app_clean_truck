@@ -17,4 +17,22 @@ class Incident {
     required this.status,
     required this.date,
   });
+
+  Incident copyWith({
+    String? uid,
+    String? idAppUsers,
+    String? description,
+    Location? location,
+    String? status,
+    Timestamp? date,
+  }) {
+    return Incident(
+      uid: uid ?? this.uid,
+      idAppUsers: idAppUsers ?? this.idAppUsers,
+      description: description ?? this.description,
+      location: location ?? this.location,
+      status: status ?? this.status,
+      date: date ?? this.date,
+    );
+  }
 }
