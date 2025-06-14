@@ -3,6 +3,7 @@ import 'package:comaslimpio/core/presentation/views/settings_screen.dart';
 import 'package:comaslimpio/core/presentation/views/main_screen.dart';
 import 'package:comaslimpio/core/presentation/widgets/notifications_screen.dart';
 import 'package:comaslimpio/features/auth/presentation/views/views_screen.dart';
+import 'package:comaslimpio/features/citizen/presentation/views/report_incident_screen.dart';
 import 'package:comaslimpio/features/truck_drive/presentation/views/truck_selection_screen.dart';
 import 'package:comaslimpio/features/truck_drive/presentation/views/truck_view_route_screen.dart';
 import 'package:comaslimpio/features/citizen/presentation/views/citizen_home_screen.dart';
@@ -79,6 +80,10 @@ final goRouterProvider = Provider((ref) {
           GoRoute(
             path: '/citizen/history',
             builder: (context, state) => const CitizenIncidentHistoryScreen(),
+          ),
+
+          GoRoute(path: '/report-incident',
+            builder: (context, state) => const ReportIncidentScreen(),
           ),
 
           // ! Truck Driver routes

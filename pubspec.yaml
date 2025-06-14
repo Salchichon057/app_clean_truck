@@ -25,6 +25,7 @@ dependencies:
   http: ^1.4.0
   intl: ^0.20.2
   latlong2: ^0.9.1
+  rxdart: ^0.28.0
   shared_preferences: ^2.5.3
 
 dev_dependencies:
