@@ -2,6 +2,7 @@ import 'package:comaslimpio/core/presentation/views/edit_profile_screen.dart';
 import 'package:comaslimpio/core/presentation/views/settings_screen.dart';
 import 'package:comaslimpio/core/presentation/views/main_screen.dart';
 import 'package:comaslimpio/core/presentation/widgets/notifications_screen.dart';
+import 'package:comaslimpio/features/admin/presentation/views/admin_reports_route_screen.dart';
 import 'package:comaslimpio/features/auth/presentation/views/views_screen.dart';
 import 'package:comaslimpio/features/citizen/presentation/views/report_incident_screen.dart';
 import 'package:comaslimpio/features/truck_drive/presentation/views/truck_selection_screen.dart';
@@ -64,7 +65,7 @@ final goRouterProvider = Provider((ref) {
 
           GoRoute(
             path: '/admin/reports',
-            builder: (context, state) => const AdminMapsScreen(),
+            builder: (context, state) => const AdminReportsRouteScreen(),
           ),
 
           GoRoute(

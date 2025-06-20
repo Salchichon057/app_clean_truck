@@ -8,7 +8,12 @@ import 'package:comaslimpio/features/citizen/presentation/providers/incident_add
 
 class IncidentCard extends ConsumerWidget {
   final Incident incident;
-  const IncidentCard({super.key, required this.incident});
+  final String userName;
+  const IncidentCard({
+    super.key,
+    required this.incident,
+    this.userName = 'Usuario Desconocido',
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,6 +29,21 @@ class IncidentCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Nombre del usuario que reportó el incidente
+            Row(
+              children: [
+                const Icon(Icons.person, color: AppTheme.primary, size: 18),
+                const SizedBox(width: 4),
+                Text(
+                  userName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             Text(
               incident.description,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
