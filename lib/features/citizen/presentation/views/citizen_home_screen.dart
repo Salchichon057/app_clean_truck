@@ -51,6 +51,12 @@ class _CitizenMapBodyState extends State<_CitizenMapBody> {
   LatLng? _lastCentered;
 
   @override
+  void dispose() {
+    mapController.dispose();
+    super.dispose();
+  }
+
+  @override
   void didUpdateWidget(covariant _CitizenMapBody oldWidget) {
     super.didUpdateWidget(oldWidget);
     final userLocation = widget.userLocationState.currentLocation;

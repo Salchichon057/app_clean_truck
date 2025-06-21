@@ -14,8 +14,8 @@ class AdminAddTruckDriversScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Conductores de Camión'),
-        backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: AppTheme.background,
+        foregroundColor: AppTheme.primary,
       ),
       body: truckDriversAsync.when(
         data: (items) {
@@ -68,14 +68,17 @@ class AdminAddTruckDriversScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppTheme.primary,
-        icon: const Icon(Icons.add),
-        label: const Text('Agregar Conductor'),
-        onPressed: () => showDialog(
-          context: context,
-          builder: (context) => const AddTruckDriverDialog(),
-        ),
+      floatingActionButton: RawMaterialButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (_) => const AddTruckDriverDialog(),
+          );
+        },
+        fillColor: AppTheme.primary,
+        shape: const CircleBorder(),
+        padding: const EdgeInsets.all(18),
+        child: const Icon(Icons.add, color: Colors.white, size: 32),
       ),
     );
   }
