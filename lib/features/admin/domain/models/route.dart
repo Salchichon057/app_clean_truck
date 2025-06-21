@@ -3,14 +3,16 @@ import 'package:comaslimpio/core/models/location.dart';
 
 class Route {
   final String uid;
-  final String idTruckDrivers;
+  final String idTruck;
+  final String routeName;
   final List<Location> points;
   final String status;
   final Timestamp date;
 
   Route({
     required this.uid,
-    required this.idTruckDrivers,
+    required this.idTruck,
+    required this.routeName,
     required this.points,
     required this.status,
     required this.date,
@@ -18,14 +20,16 @@ class Route {
 
   Route copyWith({
     String? uid,
-    String? idTruckDrivers,
+    String? idTruck,
+    String? routeName,
     List<Location>? points,
     String? status,
     Timestamp? date,
   }) {
     return Route(
       uid: uid ?? this.uid,
-      idTruckDrivers: idTruckDrivers ?? this.idTruckDrivers,
+      idTruck: idTruck ?? this.idTruck,
+      routeName: routeName ?? this.routeName,
       points: points ?? this.points,
       status: status ?? this.status,
       date: date ?? this.date,

@@ -6,7 +6,8 @@ class RouteMapper {
   static Route fromJson(Map<String, dynamic> json) {
     return Route(
       uid: json['uid'],
-      idTruckDrivers: json['id_truck_drivers'],
+      idTruck: json['id_truck'],
+      routeName: json['route_name'] ?? '',
       points: (json['points'] as List)
           .map((point) => Location.fromJson(point))
           .toList(),
@@ -18,7 +19,8 @@ class RouteMapper {
   static Map<String, dynamic> toJson(Route route) {
     return {
       'uid': route.uid,
-      'id_truck_drivers': route.idTruckDrivers,
+      'id_truck': route.idTruck,
+      'route_name': route.routeName,
       'points': route.points.map((point) => point.toJson()).toList(),
       'status': route.status,
       'date': route.date,
