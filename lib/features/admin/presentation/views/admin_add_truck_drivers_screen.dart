@@ -29,36 +29,100 @@ class AdminAddTruckDriversScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final item = items[index];
               return Card(
-                elevation: 3,
+                color: Colors.white,
+                elevation: 1,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: ListTile(
-                  leading: const CircleAvatar(
-                    backgroundColor: AppTheme.primary,
-                    child: Icon(Icons.person, color: Colors.white),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 16,
                   ),
-                  title: Text(
-                    item.user?.name ?? 'Sin nombre',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Column(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('DNI: ${item.user?.dni ?? "-"}'),
-                      Text('Correo: ${item.user?.email ?? "-"}'),
-                      Text('Teléfono: ${item.user?.phoneNumber ?? "-"}'),
-                      Text(
-                        'Ubicación: ${item.user?.location.lat ?? "-"}, ${item.user?.location.long ?? "-"}',
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: AppTheme.primary,
+                            child: const Icon(
+                              Icons.person,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              item.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ),
+                          Chip(
+                            label: Text(
+                              item.status == "available"
+                                  ? "Disponible"
+                                  : "No disponible",
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: item.status == "available"
+                                ? Colors.green
+                                : Colors.red,
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Camión: ${item.truck?.brand ?? "-"} - ${item.truck?.model ?? "-"}',
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Icon(Icons.badge, size: 18, color: Colors.grey[700]),
+                          const SizedBox(width: 6),
+                          Text(
+                            'DNI: ${item.dni}',
+                            style: TextStyle(color: Colors.grey[800]),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.email, size: 18, color: Colors.grey[700]),
+                          const SizedBox(width: 6),
+                          Text(
+                            item.email,
+                            style: TextStyle(color: Colors.grey[800]),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.phone, size: 18, color: Colors.grey[700]),
+                          const SizedBox(width: 6),
+                          Text(
+                            item.phoneNumber,
+                            style: TextStyle(color: Colors.grey[800]),
+                          ),
+                        ],
+                      ),
+                      if (item.status == "unavailable" &&
+                          item.truckId != null) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Chip(
+                              label: Text(
+                                'Camión asignado: ${item.truckId}',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              backgroundColor: AppTheme.primary,
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
-                  ),
-                  trailing: const Icon(
-                    Icons.local_shipping,
-                    color: AppTheme.primary,
                   ),
                 ),
               );
