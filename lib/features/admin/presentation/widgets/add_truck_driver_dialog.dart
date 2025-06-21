@@ -13,13 +13,51 @@ class AddTruckDriverDialog extends ConsumerStatefulWidget {
 }
 
 class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
-  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nameController;
+  late final TextEditingController _dniController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _passwordController;
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final form = ref.read(addTruckDriverFormProvider);
+    _nameController = TextEditingController(text: form.name.value);
+    _dniController = TextEditingController(text: form.dni.value);
+    _emailController = TextEditingController(text: form.email.value);
+    _phoneController = TextEditingController(text: form.phone);
+    _passwordController = TextEditingController(text: form.password.value);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _dniController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final form = ref.watch(addTruckDriverFormProvider);
     final viewModel = ref.watch(addTruckDriverViewModelProvider);
+
+    // Sincroniza los controladores con el estado del formulario
+    _nameController.value = _nameController.value.copyWith(
+      text: form.name.value,
+    );
+    _dniController.value = _dniController.value.copyWith(text: form.dni.value);
+    _emailController.value = _emailController.value.copyWith(
+      text: form.email.value,
+    );
+    _phoneController.value = _phoneController.value.copyWith(text: form.phone);
+    _passwordController.value = _passwordController.value.copyWith(
+      text: form.password.value,
+    );
 
     return Dialog(
       backgroundColor: Colors.white,
@@ -27,143 +65,158 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
         child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Agregar Conductor',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: AppTheme.primary,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Agregar Conductor',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: AppTheme.primary,
+                ),
+              ),
+              const SizedBox(height: 18),
+              TextField(
+                controller: _nameController,
+                decoration: _inputDecoration(
+                  label: 'Nombre completo',
+                  icon: Icons.person,
+                  errorText: form.name.errorMessage,
+                ),
+                onChanged: (v) =>
+                    ref.read(addTruckDriverFormProvider.notifier).updateName(v),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _dniController,
+                keyboardType: TextInputType.number,
+                maxLength: 8,
+                decoration: _inputDecoration(
+                  label: 'DNI',
+                  icon: Icons.badge,
+                  errorText: form.dni.errorMessage,
+                ),
+                onChanged: (v) =>
+                    ref.read(addTruckDriverFormProvider.notifier).updateDni(v),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: _inputDecoration(
+                  label: 'Correo electrónico',
+                  icon: Icons.email,
+                  errorText: form.email.errorMessage,
+                ),
+                onChanged: (v) => ref
+                    .read(addTruckDriverFormProvider.notifier)
+                    .updateEmail(v),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                maxLength: 9,
+                decoration: _inputDecoration(
+                  label: 'Teléfono',
+                  icon: Icons.phone,
+                  errorText: form.phone.trim().isEmpty
+                      ? 'Campo requerido'
+                      : null,
+                ),
+                onChanged: (v) => ref
+                    .read(addTruckDriverFormProvider.notifier)
+                    .updatePhone(v),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                decoration: _inputDecoration(
+                  label: 'Contraseña',
+                  icon: Icons.lock,
+                  errorText: form.password.errorMessage,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      color: AppTheme.primary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
                   ),
                 ),
-                const SizedBox(height: 18),
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre completo',
-                    prefixIcon: Icon(Icons.person),
+                onChanged: (v) => ref
+                    .read(addTruckDriverFormProvider.notifier)
+                    .updatePassword(v),
+              ),
+              const SizedBox(height: 18),
+              if (form.errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    form.errorMessage!,
+                    style: const TextStyle(color: Colors.red),
                   ),
-                  onChanged: (v) => ref
-                      .read(addTruckDriverFormProvider.notifier)
-                      .updateName(v),
-                  validator: (_) => form.name.errorMessage,
                 ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'DNI',
-                    prefixIcon: Icon(Icons.badge),
-                  ),
-                  keyboardType: TextInputType.number,
-                  maxLength: 8,
-                  onChanged: (v) => ref
-                      .read(addTruckDriverFormProvider.notifier)
-                      .updateDni(v),
-                  validator: (_) => form.dni.errorMessage,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Correo electrónico',
-                    prefixIcon: Icon(Icons.email),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  onChanged: (v) => ref
-                      .read(addTruckDriverFormProvider.notifier)
-                      .updateEmail(v),
-                  validator: (_) => form.email.errorMessage,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Teléfono',
-                    prefixIcon: Icon(Icons.phone),
-                  ),
-                  keyboardType: TextInputType.phone,
-                  onChanged: (v) => ref
-                      .read(addTruckDriverFormProvider.notifier)
-                      .updatePhone(v),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Campo requerido' : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Contraseña',
-                    prefixIcon: const Icon(Icons.lock),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: AppTheme.primary,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  obscureText: _obscurePassword,
-                  onChanged: (v) => ref
-                      .read(addTruckDriverFormProvider.notifier)
-                      .updatePassword(v),
-                  validator: (_) => form.password.errorMessage,
+                  onPressed: viewModel.isLoading
+                      ? null
+                      : () async {
+                          await ref
+                              .read(addTruckDriverViewModelProvider.notifier)
+                              .submit();
+                          final error = ref
+                              .read(addTruckDriverFormProvider)
+                              .errorMessage;
+                          if (error == null && mounted)
+                            Navigator.of(context).pop();
+                        },
+                  child: viewModel.isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Guardar'),
                 ),
-                const SizedBox(height: 18),
-                if (form.errorMessage != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      form.errorMessage!,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: viewModel.isLoading
-                        ? null
-                        : () async {
-                            if (!_formKey.currentState!.validate()) return;
-                            await ref
-                                .read(addTruckDriverViewModelProvider.notifier)
-                                .submit();
-                            final error = ref
-                                .read(addTruckDriverFormProvider)
-                                .errorMessage;
-                            if (error == null && mounted)
-                              Navigator.of(context).pop();
-                          },
-                    child: viewModel.isLoading
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Text('Guardar'),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  InputDecoration _inputDecoration({
+    required String label,
+    required IconData icon,
+    String? errorText,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      errorText: errorText,
+      suffixIcon: suffixIcon,
     );
   }
 }

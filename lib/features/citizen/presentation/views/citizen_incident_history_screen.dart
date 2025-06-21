@@ -1,3 +1,4 @@
+import 'package:comaslimpio/features/auth/presentation/providers/auth_providers.dart';
 import 'package:comaslimpio/features/citizen/presentation/components/incident_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +11,7 @@ class CitizenIncidentHistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final incidentsAsync = ref.watch(userIncidentsProvider);
+    final user = ref.watch(currentUserProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -27,7 +29,7 @@ class CitizenIncidentHistoryScreen extends ConsumerWidget {
             itemCount: incidents.length,
             itemBuilder: (context, index) {
               final incident = incidents[index];
-              return IncidentCard(incident: incident);
+              return IncidentCard(incident: incident, userName: user?.name ?? 'Usuario Desconocido');
             },
           );
         },

@@ -1,10 +1,7 @@
+import 'package:comaslimpio/core/services/firestore_service.dart';
 import 'package:comaslimpio/features/admin/presentation/providers/add_truck_form_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:comaslimpio/features/auth/domain/models/app_user.dart';
-import 'package:comaslimpio/features/auth/domain/models/notification_preferences.dart';
-import 'package:comaslimpio/features/auth/infrastructure/mappers/app_user_mapper.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:comaslimpio/core/models/location.dart';
 
 class AddTruckDriverViewModel extends StateNotifier<AsyncValue<void>> {
@@ -18,6 +15,8 @@ class AddTruckDriverViewModel extends StateNotifier<AsyncValue<void>> {
 
   Future<void> submit() async {
     final form = ref.read(addTruckDriverFormProvider);
+    final firestoreService = ref.read(firestoreServiceProvider);
+
     if (!form.isValid) {
       ref
           .read(addTruckDriverFormProvider.notifier)
@@ -27,12 +26,14 @@ class AddTruckDriverViewModel extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     ref.read(addTruckDriverFormProvider.notifier).setSubmitting(true);
     try {
-      // Verifica si ya existe el usuario
-      final existing = await FirebaseFirestore.instance
-          .collection('app_users')
-          .where('email', isEqualTo: form.email.value.trim())
-          .get();
-      if (existing.docs.isNotEmpty) {
+      // Usa FirestoreService para verificar si ya existe el usuario
+      final existingStream = firestoreService.streamCollectionWhere(
+        'app_users',
+        'email',
+        form.email.value.trim(),
+      );
+      final existingSnapshot = await existingStream.first;
+      if (existingSnapshot.docs.isNotEmpty) {
         ref
             .read(addTruckDriverFormProvider.notifier)
             .setError('Ya existe un usuario con ese correo.');
@@ -41,44 +42,24 @@ class AddTruckDriverViewModel extends StateNotifier<AsyncValue<void>> {
         return;
       }
 
-      // Crea usuario en Firebase Auth
-      final auth = FirebaseAuth.instance;
-      final userCred = await auth.createUserWithEmailAndPassword(
-        email: form.email.value.trim(),
-        password: form.password.value.trim(),
+      // Llama a la Cloud Function para crear el usuario
+      final callable = FirebaseFunctions.instance.httpsCallable(
+        'createTruckDriver',
       );
-      final uid = userCred.user?.uid;
-      if (uid == null) throw Exception('No se pudo crear el usuario');
+      final result = await callable.call({
+        'email': form.email.value.trim(),
+        'password': form.password.value.trim(),
+        'name': form.name.value.trim(),
+        'dni': form.dni.value.trim(),
+        'phoneNumber': form.phone.trim(),
+      });
 
-      // Crea AppUser
-      final appUser = AppUser(
-        uid: uid,
-        name: form.name.value.trim(),
-        email: form.email.value.trim(),
-        phoneNumber: form.phone.trim(),
-        dni: form.dni.value.trim(),
-        role: 'truck_driver',
-        location: defaultLocation,
-        status: 'active',
-        createdAt: Timestamp.now(),
-        notificationPreferences: NotificationPreferences(
-          daytimeAlerts: true,
-          nighttimeAlerts: true,
-          daytimeStart: '06:00',
-          daytimeEnd: '20:00',
-          nighttimeStart: '20:00',
-          nighttimeEnd: '06:00',
-        ),
-      );
-
-      await FirebaseFirestore.instance
-          .collection('app_users')
-          .doc(uid)
-          .set(AppUserMapper.toJson(appUser));
-
+      print('Resultado función Cloud: ${result.data}');
       ref.read(addTruckDriverFormProvider.notifier).clear();
       state = const AsyncValue.data(null);
-    } catch (e) {
+    } catch (e, st) {
+      print('Error al crear usuario: $e');
+      print('StackTrace: $st');
       ref
           .read(addTruckDriverFormProvider.notifier)
           .setError('Error: ${e.toString()}');
