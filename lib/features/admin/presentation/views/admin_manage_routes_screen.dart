@@ -3,8 +3,9 @@ import 'package:comaslimpio/core/models/location.dart';
 import 'package:comaslimpio/core/presentation/theme/app_theme.dart';
 import 'package:comaslimpio/core/services/geocoding_service.dart';
 import 'package:comaslimpio/core/config/map_token.dart';
+import 'package:comaslimpio/features/auth/presentation/providers/auth_providers.dart';
 import 'package:comaslimpio/features/truck_drive/presentation/providers/truck_provider.dart';
-
+import 'package:comaslimpio/features/admin/presentation/providers/route_provider.dart';
 import 'package:comaslimpio/features/admin/presentation/viewmodels/add_route_viewmodel_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -64,7 +65,9 @@ class _AdminManageRoutesScreenState
   @override
   Widget build(BuildContext context) {
     final trucksAsync = ref.watch(trucksStreamProvider);
+    final routesAsync = ref.watch(routesStreamProvider);
     final addRouteState = ref.watch(addRouteViewModelProvider);
+    final appUser = ref.watch(currentUserProvider);
     ref.read(addRouteViewModelProvider.notifier);
 
     final markers = <Marker>[
@@ -128,7 +131,6 @@ class _AdminManageRoutesScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Campos de nombre y camión
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Column(
@@ -143,42 +145,72 @@ class _AdminManageRoutesScreenState
                       onChanged: (_) => setState(() {}),
                     ),
                     const SizedBox(height: 10),
-                    trucksAsync.when(
-                      data: (trucks) {
-                        if (trucks.isEmpty) {
-                          return const Text('No hay camiones registrados.');
-                        }
-                        return DropdownButtonFormField<String>(
-                          value: _selectedTruckId,
-                          items: trucks
-                              .map(
-                                (truck) => DropdownMenuItem<String>(
-                                  value: truck.idTruck,
-                                  child: Text(
-                                    '${truck.idTruck} - ${truck.brand} ${truck.model}',
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedTruckId = value;
-                            });
+                    routesAsync.when(
+                      data: (routes) {
+                        final activeTruckIds = routes
+                            .where((r) => r.status == 'active')
+                            .map((r) => r.idTruck)
+                            .toSet();
+
+                        return trucksAsync.when(
+                          data: (trucks) {
+                            final availableTrucks = trucks
+                                .where(
+                                  (truck) =>
+                                      !activeTruckIds.contains(truck.idTruck),
+                                )
+                                .toList();
+
+                            if (availableTrucks.isEmpty) {
+                              _selectedTruckId = null;
+                              return const Text(
+                                'No hay camiones disponibles para asignar.\nNo puedes crear una nueva ruta.',
+                                style: TextStyle(color: Colors.red),
+                                textAlign: TextAlign.center,
+                              );
+                            }
+
+                            if (_selectedTruckId != null &&
+                                !availableTrucks.any(
+                                  (t) => t.idTruck == _selectedTruckId,
+                                )) {
+                              _selectedTruckId = null;
+                            }
+
+                            return DropdownButtonFormField<String>(
+                              value: _selectedTruckId,
+                              items: availableTrucks
+                                  .map(
+                                    (truck) => DropdownMenuItem<String>(
+                                      value: truck.idTruck,
+                                      child: Text(
+                                        '${truck.idTruck} - ${truck.brand} ${truck.model}',
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedTruckId = value;
+                                });
+                              },
+                              decoration: const InputDecoration(
+                                labelText: 'Asignar camión',
+                                prefixIcon: Icon(Icons.local_shipping),
+                                border: OutlineInputBorder(),
+                              ),
+                            );
                           },
-                          decoration: const InputDecoration(
-                            labelText: 'Asignar camión',
-                            prefixIcon: Icon(Icons.local_shipping),
-                            border: OutlineInputBorder(),
-                          ),
+                          loading: () => const LinearProgressIndicator(),
+                          error: (e, _) => Text('Error cargando camiones: $e'),
                         );
                       },
                       loading: () => const LinearProgressIndicator(),
-                      error: (e, _) => Text('Error cargando camiones: $e'),
+                      error: (e, _) => Text('Error cargando rutas: $e'),
                     ),
                   ],
                 ),
               ),
-              // Mapa (media pantalla)
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.35,
                 child: FutureBuilder<String>(
@@ -191,11 +223,25 @@ class _AdminManageRoutesScreenState
                       );
                     }
                     final mapboxToken = snapshot.data!;
+
+                    LatLng initialCenter;
+                    if (_points.isNotEmpty) {
+                      initialCenter = LatLng(
+                        _points.last.lat,
+                        _points.last.long,
+                      );
+                    } else if (appUser?.location != null) {
+                      initialCenter = LatLng(
+                        appUser!.location.lat,
+                        appUser.location.long,
+                      );
+                    } else {
+                      initialCenter = const LatLng(-11.9498, -77.0622);
+                    }
+
                     return FlutterMap(
                       options: MapOptions(
-                        initialCenter: _points.isNotEmpty
-                            ? LatLng(_points.last.lat, _points.last.long)
-                            : LatLng(-11.9498, -77.0622), // Centro por defecto
+                        initialCenter: initialCenter,
                         initialZoom: 14,
                         onTap: (tapPosition, latLng) => _addPoint(latLng),
                       ),
@@ -279,7 +325,6 @@ class _AdminManageRoutesScreenState
                   ],
                 ),
               ),
-              // Botón guardar ruta al final de todo
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: SizedBox(
