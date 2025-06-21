@@ -4,8 +4,7 @@ import 'package:comaslimpio/core/presentation/theme/app_theme.dart';
 import 'package:comaslimpio/core/services/geocoding_service.dart';
 import 'package:comaslimpio/core/config/map_token.dart';
 import 'package:comaslimpio/features/truck_drive/presentation/providers/truck_provider.dart';
-import 'package:comaslimpio/features/admin/domain/models/route.dart'
-    as route_model;
+
 import 'package:comaslimpio/features/admin/presentation/viewmodels/add_route_viewmodel_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -66,7 +65,7 @@ class _AdminManageRoutesScreenState
   Widget build(BuildContext context) {
     final trucksAsync = ref.watch(trucksStreamProvider);
     final addRouteState = ref.watch(addRouteViewModelProvider);
-    final addRouteVM = ref.read(addRouteViewModelProvider.notifier);
+    ref.read(addRouteViewModelProvider.notifier);
 
     final markers = <Marker>[
       for (int i = 0; i < _points.length; i++)
@@ -90,7 +89,7 @@ class _AdminManageRoutesScreenState
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
+                        color: Colors.black.withValues(alpha: 0.08),
                         blurRadius: 2,
                         offset: const Offset(0, 1),
                       ),
@@ -294,19 +293,19 @@ class _AdminManageRoutesScreenState
                     ),
                     onPressed: _canSave && !addRouteState.isLoading
                         ? () async {
-                            final newRoute = route_model.Route(
-                              uid: '', // Firestore generará el ID
-                              idTruck: _selectedTruckId!,
-                              routeName: _routeNameController.text.trim(),
-                              points: List<Location>.from(_points),
-                              status: 'active',
-                              date: Timestamp.now(),
-                            );
-                            await addRouteVM.addRoute(newRoute);
-                            if (ref.read(addRouteViewModelProvider).success &&
-                                mounted) {
-                              Navigator.of(context).pop();
-                            }
+                            final routesCollection = FirebaseFirestore.instance
+                                .collection('routes');
+                            final docRef = await routesCollection.add({
+                              'id_truck': _selectedTruckId!,
+                              'route_name': _routeNameController.text.trim(),
+                              'points': _points.map((e) => e.toJson()).toList(),
+                              'status': 'active',
+                              'date': Timestamp.now(),
+                            });
+
+                            await docRef.update({'uid': docRef.id});
+
+                            if (mounted) Navigator.of(context).pop();
                           }
                         : null,
                     child: addRouteState.isLoading
