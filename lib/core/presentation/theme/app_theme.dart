@@ -11,9 +11,21 @@ class AppTheme {
   static const Color white = Color(0xFFFFFFFF);
 
   ThemeData getTheme() {
-    return ThemeData(
+    final base = ThemeData.light();
+    return base.copyWith(
       primaryColor: primary,
       scaffoldBackgroundColor: background,
+      colorScheme: ColorScheme(
+        brightness: Brightness.light,
+        primary: primary,
+        onPrimary: white,
+        secondary: secondary,
+        onSecondary: white,
+        error: Colors.red,
+        onError: white,
+        surface: white,
+        onSurface: black,
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: primary,
         foregroundColor: white,
@@ -23,9 +35,27 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: primary,
           foregroundColor: white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide.none,
+          ),
           padding: const EdgeInsets.symmetric(vertical: 16),
+          elevation: 0,
         ),
+      ),
+      chipTheme: const ChipThemeData(
+        backgroundColor: AppTheme.white,
+        selectedColor: AppTheme.tertiary,
+        secondarySelectedColor: AppTheme.quaternary,
+        disabledColor: Colors.grey,
+        labelStyle: TextStyle(color: AppTheme.black, fontSize: 14),
+        secondaryLabelStyle: TextStyle(color: AppTheme.white, fontSize: 14),
+        padding: EdgeInsets.all(8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(8)),
+          side: BorderSide.none,
+        ),
+        side: BorderSide.none,
       ),
       textTheme: const TextTheme(
         headlineLarge: TextStyle(
