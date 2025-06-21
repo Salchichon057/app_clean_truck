@@ -106,7 +106,7 @@ class _CitizenMapBodyState extends State<_CitizenMapBody> {
                     final nearbyRoutes = routes.where((route) {
                       return nearbyTrucks.any(
                         (truck) =>
-                            truck.truckDriver.uidUsers == route.idTruckDrivers,
+                            truck.truckDriver.uidUsers == route.idTruck,
                       );
                     }).toList();
 
