@@ -6,7 +6,6 @@ import 'package:comaslimpio/features/truck_drive/domain/models/truck_driver.dart
 import 'package:comaslimpio/features/auth/infrastructure/mappers/app_user_mapper.dart';
 import 'package:comaslimpio/features/truck_drive/infrastructure/mappers/truck_driver_mapper.dart';
 
-// Modelo enriquecido para la UI
 class TruckDriverListItem {
   final String name;
   final String dni;

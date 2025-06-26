@@ -156,8 +156,7 @@ class _TruckFormDialogState extends ConsumerState<TruckFormDialog> {
                                 child: Text('No disponible'),
                               ),
                             ],
-                            onChanged: (v) =>
-                                setState(() => status = v ?? 'available'),
+                            onChanged: null,
                           ),
                         ),
                         const SizedBox(height: 20),
