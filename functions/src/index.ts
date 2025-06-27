@@ -25,13 +25,12 @@ export const createTruckDriver = onCall(async (request) => {
             displayName: name,
         });
 
-        // Guarda el teléfono en Firestore (como quieras)
         await admin.firestore().collection("app_users").doc(userRecord.uid).set({
             uid: userRecord.uid,
             name,
             email,
             dni,
-            phoneNumber,
+            phone_number: phoneNumber,
             role: "truck_driver",
             status: "active",
             createdAt: admin.firestore.FieldValue.serverTimestamp(),

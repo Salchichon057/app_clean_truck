@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:comaslimpio/features/truck_drive/presentation/providers/truck_provider.dart';
 import 'package:comaslimpio/features/admin/presentation/widgets/truck_form_dialog.dart';
 import 'package:comaslimpio/features/truck_drive/domain/models/truck.dart';
+import 'package:comaslimpio/features/truck_drive/presentation/providers/truck_driver_name_provider.dart';
 
 class AdminAddTrucksScreen extends ConsumerWidget {
   const AdminAddTrucksScreen({super.key});
@@ -57,14 +58,15 @@ class _TruckCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final routesAsync = ref.watch(activeRoutesStreamProvider);
+    final driverNameAsync = ref.watch(truckDriverNameProvider(truck.idAppUser));
 
     return routesAsync.when(
       data: (routes) {
-        // Busca la ruta asignada a este camión (relación 1 a 1)
-        final assignedRoute = routes.where((r) => r.idTruck == truck.idTruck).isNotEmpty
+        final assignedRoute =
+            routes.where((r) => r.idTruck == truck.idTruck).isNotEmpty
             ? routes.firstWhere((r) => r.idTruck == truck.idTruck)
             : null;
-        final isAvailable = assignedRoute == null;
+        final isAvailable = truck.idAppUser == null;
 
         return Card(
           elevation: 1,
@@ -81,8 +83,8 @@ class _TruckCard extends ConsumerWidget {
                 Container(
                   decoration: BoxDecoration(
                     color: isAvailable
-                        ? Colors.green.withValues(alpha:  0.1)
-                        : Colors.red.withValues(alpha:  0.1),
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   padding: const EdgeInsets.all(10),
@@ -123,32 +125,64 @@ class _TruckCard extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        isAvailable
-                            ? 'Estado: Disponible'
-                            : 'Estado: No disponible',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: isAvailable ? Colors.green : Colors.red,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      if (assignedRoute != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            'Ruta: ${assignedRoute.routeName}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: AppTheme.primary,
-                              fontWeight: FontWeight.w500,
-                            ),
+                      // Text(
+                      //   isAvailable
+                      //       ? 'Estado: Disponible'
+                      //       : 'Estado: No disponible',
+                      //   style: TextStyle(
+                      //     fontSize: 14,
+                      //     color: isAvailable ? Colors.green : Colors.red,
+                      //     fontWeight: FontWeight.w600,
+                      //   ),
+                      // ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          assignedRoute != null
+                              ? 'Ruta: ${assignedRoute.routeName}'
+                              : 'Ruta: No seleccionada',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: assignedRoute != null
+                                ? AppTheme.primary
+                                : Colors.grey[600],
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
+                      ),
+                      driverNameAsync.when(
+                        data: (name) => name != null
+                            ? Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  'Conductor: $name',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              )
+                            : Text('Conductor: No asignado',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                        loading: () => const Padding(
+                          padding: EdgeInsets.only(top: 4),
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                        error: (e, _) => const SizedBox(),
+                      ),
                     ],
                   ),
                 ),
-                // Menú de acciones
                 PopupMenuButton<String>(
                   color: Colors.white,
                   icon: const Icon(Icons.more_vert, color: AppTheme.primary),
