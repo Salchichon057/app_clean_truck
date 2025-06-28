@@ -2,6 +2,7 @@
 
 import 'package:comaslimpio/core/inputs/email.dart';
 import 'package:comaslimpio/core/inputs/password.dart';
+import 'package:comaslimpio/core/services/fcm_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:formz/formz.dart';
 import 'package:comaslimpio/features/auth/presentation/providers/auth_providers.dart';
@@ -73,9 +74,15 @@ class LoginFormNotifier extends StateNotifier<LoginFormState> {
 
     try {
       await authNotifier.signIn(email.value, password.value);
+
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final user = authNotifier.state.appUser;
+      if (user != null) {
+        await FcmService.instance.saveTokenToFirestore(user.uid);
+      }
       return true;
     } catch (e) {
-      // Puedes guardar el error en el estado si quieres mostrarlo en la UI
       return false;
     } finally {
       state = state.copyWith(isPosting: false);

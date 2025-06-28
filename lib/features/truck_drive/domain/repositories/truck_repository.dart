@@ -12,4 +12,5 @@ abstract class TruckRepository {
   Stream<List<Truck>> watchAllTrucks();
   Stream<List<Truck>> watchTrucksByStatus(String status);
   Stream<Truck?> watchTruckById(String id);
+  Stream<List<Truck>> watchTrucksByUser(String userId);
 }
