@@ -1,4 +1,5 @@
 import 'package:comaslimpio/core/components/map/map_location_provider.dart';
+import 'package:comaslimpio/core/presentation/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -8,6 +9,7 @@ import 'package:comaslimpio/core/config/map_token.dart';
 import 'package:comaslimpio/features/admin/domain/models/route.dart'
     as my_route;
 import 'package:comaslimpio/features/admin/presentation/providers/route_provider.dart';
+import 'package:comaslimpio/features/citizen/presentation/providers/selected_route_provider.dart';
 
 class CitizenHomeScreen extends ConsumerWidget {
   const CitizenHomeScreen({super.key});
@@ -16,8 +18,26 @@ class CitizenHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final routesAsync = ref.watch(activeRoutesStreamProvider);
     final userLocationState = ref.watch(mapLocationProvider);
+    final selectedRoute = ref.watch(selectedRouteProvider);
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Mapa Ciudadano'),
+        foregroundColor: AppTheme.primary,
+        backgroundColor: Colors.transparent,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.alt_route, color: AppTheme.primary),
+            tooltip: selectedRoute != null
+                ? 'Ruta: ${selectedRoute.routeName}'
+                : 'Seleccionar ruta',
+            onPressed: () {
+              // Redirige a la pantalla de rutas
+              context.push('/citizen/routes');
+            },
+          ),
+        ],
+      ),
       body: _CitizenMapBody(
         routesAsync: routesAsync,
         userLocationState: userLocationState,
@@ -26,7 +46,7 @@ class CitizenHomeScreen extends ConsumerWidget {
   }
 }
 
-class _CitizenMapBody extends StatefulWidget {
+class _CitizenMapBody extends ConsumerStatefulWidget {
   final AsyncValue<List<my_route.Route>> routesAsync;
   final MapLocationState userLocationState;
 
@@ -36,10 +56,10 @@ class _CitizenMapBody extends StatefulWidget {
   });
 
   @override
-  State<_CitizenMapBody> createState() => _CitizenMapBodyState();
+  ConsumerState<_CitizenMapBody> createState() => _CitizenMapBodyState();
 }
 
-class _CitizenMapBodyState extends State<_CitizenMapBody> {
+class _CitizenMapBodyState extends ConsumerState<_CitizenMapBody> {
   final mapController = MapController();
   LatLng? _lastCentered;
   bool _mapReady = false;
@@ -75,6 +95,16 @@ class _CitizenMapBodyState extends State<_CitizenMapBody> {
   @override
   Widget build(BuildContext context) {
     final userLocation = widget.userLocationState.currentLocation;
+    final selectedRoute = ref.watch(selectedRouteProvider);
+
+    if (selectedRoute == null) {
+      return const Center(
+        child: Text(
+          'Selecciona una ruta para ver el mapa',
+          style: TextStyle(fontSize: 18, color: Colors.grey),
+        ),
+      );
+    }
 
     return Stack(
       children: [
@@ -88,13 +118,12 @@ class _CitizenMapBodyState extends State<_CitizenMapBody> {
 
             return widget.routesAsync.when(
               data: (routes) {
-                // ! Solo muestra la primera ruta activa
-                final route = routes.isNotEmpty ? routes.first : null;
+                final route = selectedRoute;
 
                 LatLng initialCenter = const LatLng(-12.0464, -77.0428);
                 if (userLocation != null) {
                   initialCenter = LatLng(userLocation.lat, userLocation.long);
-                } else if (route != null && route.points.isNotEmpty) {
+                } else if (route.points.isNotEmpty) {
                   initialCenter = LatLng(
                     route.points.first.lat,
                     route.points.first.long,
@@ -116,8 +145,7 @@ class _CitizenMapBodyState extends State<_CitizenMapBody> {
                       urlTemplate:
                           'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
                     ),
-                    // Ruta activa (si existe)
-                    if (route != null && route.points.length > 1)
+                    if (route.points.length > 1)
                       PolylineLayer(
                         polylines: [
                           Polyline(
@@ -129,7 +157,6 @@ class _CitizenMapBodyState extends State<_CitizenMapBody> {
                           ),
                         ],
                       ),
-                    // Marcador del usuario (casa)
                     if (userLocation != null)
                       MarkerLayer(
                         markers: [

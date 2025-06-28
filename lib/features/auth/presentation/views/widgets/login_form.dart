@@ -1,6 +1,5 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:comaslimpio/features/auth/presentation/providers/auth_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -95,11 +94,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                   : () async {
                       final result = await notifier.onFormSubmit();
                       if (!mounted) return;
-                      if (result) {
-                        final userRole =
-                            ref.read(authProvider).userRole ?? 'citizen';
-                        context.go('/$userRole');
-                      } else {
+                      if (!result) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Error al iniciar sesión'),

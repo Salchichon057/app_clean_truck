@@ -4,6 +4,7 @@ import * as admin from "firebase-admin";
 
 admin.initializeApp();
 
+// Función para crear un conductor de camión
 export const createTruckDriver = onCall(async (request) => {
     console.log("createTruckDriver called", request.data);
 
@@ -25,13 +26,12 @@ export const createTruckDriver = onCall(async (request) => {
             displayName: name,
         });
 
-        // Guarda el teléfono en Firestore (como quieras)
         await admin.firestore().collection("app_users").doc(userRecord.uid).set({
             uid: userRecord.uid,
             name,
             email,
             dni,
-            phoneNumber,
+            phone_number: phoneNumber,
             role: "truck_driver",
             status: "active",
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -56,3 +56,68 @@ export const createTruckDriver = onCall(async (request) => {
         );
     }
 });
+
+// Haversine formula para calcular distancia entre dos puntos (en metros)
+function getDistanceFromLatLonInMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
+    const R = 6371000; // Radio de la tierra en metros
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+// Cloud Function: Notificar cuando el camión (conductor) está cerca de un ciudadano
+export const notifyCitizensWhenTruckIsNear = functions.firestore
+    .document('app_users/{userId}')
+    .onWrite(async (change, context) => {
+        const after = change.after.data();
+        if (!after) return;
+
+        // Solo ejecuta si es un conductor y tiene ubicación
+        if (after.role !== 'truck_driver' || !after.location) return;
+
+        const truckLat = after.location.lat;
+        const truckLong = after.location.long;
+        const truckId = after.uid;
+
+        // Obtén todos los ciudadanos con ubicación
+        const usersSnap = await admin.firestore().collection('app_users')
+            .where('role', '==', 'citizen')
+            .get();
+
+        const notifications: Promise<any>[] = [];
+
+        usersSnap.forEach(doc => {
+            const user = doc.data();
+            if (!user.location || !user.fcmToken) return;
+
+            const userLat = user.location.lat;
+            const userLong = user.location.long;
+
+            const distance = getDistanceFromLatLonInMeters(truckLat, truckLong, userLat, userLong);
+
+            if (distance <= 200) {
+                const payload = {
+                    notification: {
+                        title: "¡El camión está cerca!",
+                        body: "El camión de basura está a menos de 200 metros de tu ubicación.",
+                    },
+                    data: {
+                        truckId: truckId,
+                        distance: distance.toFixed(0),
+                    }
+                };
+                notifications.push(
+                    admin.messaging().sendToDevice(user.fcmToken, payload)
+                );
+            }
+        });
+
+        await Promise.all(notifications);
+        return null;
+    });

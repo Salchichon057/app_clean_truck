@@ -12,6 +12,7 @@ class TruckMapper {
       engineNumber: json['engine_number'],
       vehicleType: json['vehicle_type'],
       status: json['status'],
+      idAppUser: json['id_app_user'],
     );
   }
 
@@ -26,6 +27,7 @@ class TruckMapper {
       'engine_number': truck.engineNumber,
       'vehicle_type': truck.vehicleType,
       'status': truck.status,
+      'id_app_user': truck.idAppUser,
     };
   }
 }

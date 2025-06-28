@@ -86,4 +86,15 @@ class TruckFirebaseDatasource implements TruckRepository {
               : null,
         );
   }
+
+   @override
+  Stream<List<Truck>> watchTrucksByUser(String userId) {
+    return _firestoreService
+        .streamCollectionWhere('trucks', 'id_app_user', userId)
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => TruckMapper.fromJson(doc.data() as Map<String, dynamic>))
+              .toList(),
+        );
+  }
 }

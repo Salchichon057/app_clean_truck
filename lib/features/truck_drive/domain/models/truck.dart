@@ -8,6 +8,7 @@ class Truck {
   final String engineNumber;
   final String vehicleType;
   final String status;
+  final String? idAppUser;
 
   Truck({
     required this.idTruck,
@@ -19,6 +20,7 @@ class Truck {
     required this.engineNumber,
     required this.vehicleType,
     required this.status,
+    this.idAppUser,
   });
 
   Truck copyWith({
@@ -31,6 +33,7 @@ class Truck {
     String? engineNumber,
     String? vehicleType,
     String? status,
+    String? idAppUser,
   }) {
     return Truck(
       idTruck: idTruck ?? this.idTruck,
@@ -42,6 +45,7 @@ class Truck {
       engineNumber: engineNumber ?? this.engineNumber,
       vehicleType: vehicleType ?? this.vehicleType,
       status: status ?? this.status,
+      idAppUser: idAppUser ?? this.idAppUser,
     );
   }
 }

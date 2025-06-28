@@ -61,16 +61,12 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 onSelected: (value) {
-                  if
-                  // (value == 'profile') {
-                  //   context.go('/profile');
-                  // }
-                  // else if
-                  (value == 'settings') {
+                  if (value == 'settings') {
                     context.go('/settings');
                   } else if (value == 'logout') {
                     ref.read(navigationProvider.notifier).reset();
-                    ref.read(authProvider.notifier).signOut();
+                    // Cambia aquí: pasa el ref al signOut
+                    ref.read(authProvider.notifier).signOut(ref);
                   }
                 },
                 itemBuilder: (BuildContext context) {
