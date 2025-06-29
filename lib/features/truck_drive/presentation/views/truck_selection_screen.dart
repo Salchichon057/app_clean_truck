@@ -24,9 +24,7 @@ class _TruckSelectionScreenState extends ConsumerState<TruckSelectionScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: const Text('Confirmar selección'),
         content: Text(
           '¿Deseas seleccionar el camión ${truck.brand} ${truck.model} (Placa: ${truck.idTruck})?',
@@ -53,7 +51,9 @@ class _TruckSelectionScreenState extends ConsumerState<TruckSelectionScreen> {
     );
     if (confirmed == true && user != null) {
       final truckNotifier = ref.read(truckViewModelProvider.notifier);
-      await truckNotifier.updateTruck(truck.copyWith(idAppUser: user.uid));
+      await truckNotifier.updateTruck(
+        truck.copyWith(idAppUser: user.uid, status: 'unavailable'),
+      );
       await Future.delayed(const Duration(milliseconds: 300));
       if (mounted && Navigator.of(context).canPop()) {
         context.pop();
@@ -82,9 +82,7 @@ class _TruckSelectionScreenState extends ConsumerState<TruckSelectionScreen> {
           final myTruckId = user == null
               ? null
               : trucks
-                    .firstWhereOrNull(
-                      (t) => t.idAppUser == user.uid,
-                    )
+                    .firstWhereOrNull((t) => t.idAppUser == user.uid)
                     ?.idTruck;
 
           // Si hay uno seleccionado, lo llevamos arriba

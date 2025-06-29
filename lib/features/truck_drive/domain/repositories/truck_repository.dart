@@ -7,6 +7,7 @@ abstract class TruckRepository {
   Future<void> addTruck(Truck truck);
   Future<void> updateTruck(Truck truck);
   Future<void> deleteTruck(String id);
+  Future<List<Truck>> getTrucksByUser(String userId);
 
   // Métodos Stream (tiempo real)
   Stream<List<Truck>> watchAllTrucks();

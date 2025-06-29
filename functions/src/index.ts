@@ -67,7 +67,7 @@ export const notifyCitizensWhenTruckIsNear = onDocumentWritten(
 
 		const conductorUid = after.uid;
 		const truckSnap = await admin.firestore().collection('trucks')
-			.where('idAppUser', '==', conductorUid)
+			.where('id_app_user', '==', conductorUid)
 			.limit(1)
 			.get();
 
@@ -76,7 +76,8 @@ export const notifyCitizensWhenTruckIsNear = onDocumentWritten(
 		const truckId = truck.idTruck;
 
 		const routeSnap = await admin.firestore().collection('routes')
-			.where('idTruck', '==', truckId)
+			.where('id_truck', '==', truckId)
+			.where('status', '==', 'active')
 			.limit(1)
 			.get();
 
@@ -123,7 +124,6 @@ export const notifyCitizensWhenTruckIsNear = onDocumentWritten(
 					const lastNotif = recentNotifSnap.docs[0].data();
 					const lastTimestamp = lastNotif.timestamp?.toDate();
 					if (lastTimestamp && (now.toDate().getTime() - lastTimestamp.getTime()) < 3 * 60 * 1000) {
-						// Ya se notificó en los últimos 3 minutos
 						shouldSend = false;
 					}
 				}

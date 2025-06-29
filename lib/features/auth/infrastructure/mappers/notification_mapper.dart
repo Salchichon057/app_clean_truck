@@ -7,6 +7,7 @@ class NotificationMapper {
       uid: json['uid'],
       type: json['type'],
       message: json['message'],
+      routeId: json['routeId'],
       timestamp: json['timestamp'] as Timestamp,
       read: json['read'] ?? false,
     );
@@ -17,6 +18,7 @@ class NotificationMapper {
       'uid': notification.uid,
       'type': notification.type,
       'message': notification.message,
+      'routeId': notification.routeId,
       'timestamp': notification.timestamp,
       'read': notification.read,
     };

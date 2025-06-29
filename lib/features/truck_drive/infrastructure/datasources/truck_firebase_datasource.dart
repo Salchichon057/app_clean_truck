@@ -47,6 +47,17 @@ class TruckFirebaseDatasource implements TruckRepository {
     await _firestoreService.collection('trucks').doc(id).delete();
   }
 
+  @override
+  Future<List<Truck>> getTrucksByUser(String userId) async {
+    final docs = await _firestoreService
+        .collection('trucks')
+        .where('id_app_user', isEqualTo: userId)
+        .get();
+    return docs.docs
+        .map((doc) => TruckMapper.fromJson(doc.data() as Map<String, dynamic>))
+        .toList();
+  }
+
   // Métodos Stream
   @override
   Stream<List<Truck>> watchAllTrucks() {
@@ -87,13 +98,16 @@ class TruckFirebaseDatasource implements TruckRepository {
         );
   }
 
-   @override
+  @override
   Stream<List<Truck>> watchTrucksByUser(String userId) {
     return _firestoreService
         .streamCollectionWhere('trucks', 'id_app_user', userId)
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => TruckMapper.fromJson(doc.data() as Map<String, dynamic>))
+              .map(
+                (doc) =>
+                    TruckMapper.fromJson(doc.data() as Map<String, dynamic>),
+              )
               .toList(),
         );
   }

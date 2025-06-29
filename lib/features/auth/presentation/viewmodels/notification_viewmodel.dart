@@ -79,4 +79,22 @@ class NotificationViewModel extends StateNotifier<NotificationState> {
       state = state.copyWith(error: e.toString());
     }
   }
+
+  Future<void> deleteNotification(String userId, String notificationId) async {
+    try {
+      await _repository.deleteNotification(userId, notificationId);
+      await loadNotificationsForUser(userId);
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+    }
+  }
+
+  Future<void> deleteAll(String userId) async {
+    try {
+      await _repository.deleteAllNotifications(userId);
+      await loadNotificationsForUser(userId);
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+    }
+  }
 }

@@ -18,10 +18,7 @@ class NotificationFirebaseDatasource implements NotificationRepository {
         .orderBy('timestamp', descending: true)
         .get();
     return snapshot.docs
-        .map(
-          (doc) =>
-              NotificationMapper.fromJson(doc.data()),
-        )
+        .map((doc) => NotificationMapper.fromJson(doc.data()))
         .toList();
   }
 
@@ -47,6 +44,28 @@ class NotificationFirebaseDatasource implements NotificationRepository {
         .update({'read': true});
   }
 
+  @override
+  Future<void> deleteNotification(String userId, String notificationId) async {
+    await _firestoreService
+        .collection('app_users')
+        .doc(userId)
+        .collection('notifications')
+        .doc(notificationId)
+        .delete();
+  }
+
+  @override
+  Future<void> deleteAllNotifications(String userId) async {
+    final snapshot = await _firestoreService
+        .collection('app_users')
+        .doc(userId)
+        .collection('notifications')
+        .get();
+    for (final doc in snapshot.docs) {
+      await doc.reference.delete();
+    }
+  }
+
   // Métodos Stream
   @override
   Stream<List<Notification>> watchNotificationsForUser(String userId) {
@@ -58,11 +77,7 @@ class NotificationFirebaseDatasource implements NotificationRepository {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map(
-                (doc) => NotificationMapper.fromJson(
-                  doc.data(),
-                ),
-              )
+              .map((doc) => NotificationMapper.fromJson(doc.data()))
               .toList(),
         );
   }
@@ -78,11 +93,7 @@ class NotificationFirebaseDatasource implements NotificationRepository {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map(
-                (doc) => NotificationMapper.fromJson(
-                  doc.data(),
-                ),
-              )
+              .map((doc) => NotificationMapper.fromJson(doc.data()))
               .toList(),
         );
   }

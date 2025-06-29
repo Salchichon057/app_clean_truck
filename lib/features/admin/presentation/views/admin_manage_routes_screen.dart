@@ -157,6 +157,7 @@ class _AdminManageRoutesScreenState
                             final availableTrucks = trucks
                                 .where(
                                   (truck) =>
+                                      truck.status == 'available' &&
                                       !activeTruckIds.contains(truck.idTruck),
                                 )
                                 .toList();
