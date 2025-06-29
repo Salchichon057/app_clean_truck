@@ -1,4 +1,5 @@
 import 'package:comaslimpio/features/auth/domain/models/notification.dart';
+import 'package:comaslimpio/features/auth/presentation/providers/auth_providers.dart';
 import 'package:comaslimpio/features/auth/presentation/viewmodels/notification_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:comaslimpio/core/services/firestore_service.dart';
@@ -17,11 +18,12 @@ final notificationViewModelProvider =
     });
 
 // Stream Providers
-final notificationsStreamProvider =
-    StreamProvider.family<List<Notification>, String>((ref, userId) {
-      final repo = ref.watch(notificationRepositoryProvider);
-      return repo.watchNotificationsForUser(userId);
-    });
+final notificationsStreamProvider = StreamProvider<List<Notification>>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return const Stream.empty();
+  final repo = ref.watch(notificationRepositoryProvider);
+  return repo.watchNotificationsForUser(user.uid);
+});
 
 final unreadNotificationsStreamProvider =
     StreamProvider.family<List<Notification>, String>((ref, userId) {
