@@ -34,9 +34,9 @@ export const createTruckDriver = onCall(async (request) => {
 			phone_number: phoneNumber,
 			role: "truck_driver",
 			status: "active",
-			createdAt: admin.firestore.FieldValue.serverTimestamp(),
+			created_at: admin.firestore.FieldValue.serverTimestamp(),
 			location: { lat: -11.9498, long: -77.0622 },
-			notificationPreferences: {
+			notification_preferences: {
 				daytimeAlerts: true,
 				nighttimeAlerts: true,
 				daytimeStart: "06:00",
