@@ -79,7 +79,8 @@ class LoginFormNotifier extends StateNotifier<LoginFormState> {
 
       final user = authNotifier.state.appUser;
       if (user != null) {
-        await FcmService.instance.saveTokenToFirestore(user.uid);
+        // Asegurar que el usuario tenga FCM token y campos requeridos
+        await FcmService.instance.ensureUserHasRequiredFields(user.uid);
       }
       return true;
     } catch (e) {

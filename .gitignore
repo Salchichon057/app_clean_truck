@@ -144,3 +144,4 @@ assets/gcloud_credentials.json
 *.pubspec.lock
 /assets/gcloud_credentials.json
 .env
+.github

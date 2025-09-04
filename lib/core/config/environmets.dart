@@ -5,5 +5,5 @@ class Environment {
     await dotenv.load(fileName: ".env");
   }
 
-  static String apiUrl = dotenv.env['API_URL'] ?? 'API URL not found';
+  static String apiUrl = dotenv.env['NOTIFICATION_API_URL'] ?? 'http://localhost:3000';
 }

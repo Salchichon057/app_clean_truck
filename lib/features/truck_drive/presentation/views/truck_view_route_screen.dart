@@ -3,9 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:comaslimpio/core/presentation/theme/app_theme.dart';
 import 'package:comaslimpio/features/auth/presentation/providers/auth_providers.dart';
 import 'package:comaslimpio/features/truck_drive/presentation/providers/active_truck_route_provider.dart';
+import 'package:comaslimpio/features/truck_drive/presentation/providers/notification_api_provider.dart';
+import 'package:comaslimpio/core/models/location.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:comaslimpio/core/config/map_token.dart';
@@ -67,14 +70,67 @@ class _TruckViewRouteScreenState extends ConsumerState<TruckViewRouteScreen> {
 
   Future<void> _sendLocation(String userId) async {
     if (_currentPosition == null) return;
-    await FirebaseFirestore.instance.collection('app_users').doc(userId).update(
-      {
-        'location': {
-          'lat': _currentPosition!.latitude,
-          'long': _currentPosition!.longitude,
-        },
-      },
+    
+    final location = Location(
+      lat: _currentPosition!.latitude,
+      long: _currentPosition!.longitude,
     );
+
+    // Actualizar solo Firestore para datos del conductor (sin trigger de notificaciones)
+    try {
+      await FirebaseFirestore.instance.collection('app_users').doc(userId).update({
+        'location': {
+          'lat': location.lat,
+          'long': location.long,
+        },
+      });
+      print('✅ Firestore updated successfully');
+    } catch (e) {
+      print('❌ Firestore update error: $e');
+    }
+
+    // Enviar a API TypeScript para control total de notificaciones
+    try {
+      final apiNotifier = ref.read(notificationApiProvider.notifier);
+      final success = await apiNotifier.updateTruckLocation(
+        userId: userId,
+        location: location,
+      );
+      
+      if (success) {
+        print('✅ TypeScript API processed notifications successfully');
+      } else {
+        print('❌ TypeScript API notification processing failed');
+      }
+    } catch (e) {
+      print('❌ TypeScript API error: $e');
+    }
+  }
+
+  Future<void> _sendTestNotification(String userId) async {
+    final apiNotifier = ref.read(notificationApiProvider.notifier);
+    final success = await apiNotifier.sendTestNotification(userId);
+    
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Notificación de prueba enviada'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ Error al enviar notificación de prueba'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _checkApiHealth() async {
+    final apiNotifier = ref.read(notificationApiProvider.notifier);
+    await apiNotifier.checkApiHealth();
   }
 
   @override
@@ -89,6 +145,7 @@ class _TruckViewRouteScreenState extends ConsumerState<TruckViewRouteScreen> {
   Widget build(BuildContext context) {
     final routeAsync = ref.watch(activeTruckRouteProvider);
     final user = ref.watch(currentUserProvider);
+    final apiState = ref.watch(notificationApiProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -96,6 +153,28 @@ class _TruckViewRouteScreenState extends ConsumerState<TruckViewRouteScreen> {
         backgroundColor: AppTheme.background,
         foregroundColor: AppTheme.primary,
         actions: [
+          // Indicador de estado de API
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: Row(
+              children: [
+                Icon(
+                  apiState.isConnected ? Icons.cloud_done : Icons.cloud_off,
+                  color: apiState.isConnected ? Colors.green : Colors.red,
+                  size: 20,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  apiState.isConnected ? 'API OK' : 'API Error',
+                  style: TextStyle(
+                    color: apiState.isConnected ? Colors.green : Colors.red,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
           if (user != null)
             Row(
               children: [
@@ -184,6 +263,89 @@ class _TruckViewRouteScreenState extends ConsumerState<TruckViewRouteScreen> {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
+      ),
+      floatingActionButton: user != null ? _buildDebugFAB(user.uid) : null,
+    );
+  }
+
+  Widget _buildDebugFAB(String userId) {
+    final apiState = ref.watch(notificationApiProvider);
+    
+    return FloatingActionButton(
+      onPressed: () => _showApiDebugDialog(userId),
+      backgroundColor: AppTheme.primary,
+      child: Icon(
+        apiState.isLoading ? Icons.hourglass_empty : Icons.api,
+        color: Colors.white,
+      ),
+    );
+  }
+
+  void _showApiDebugDialog(String userId) {
+    final apiState = ref.watch(notificationApiProvider);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              apiState.isConnected ? Icons.check_circle : Icons.error,
+              color: apiState.isConnected ? Colors.green : Colors.red,
+            ),
+            const SizedBox(width: 8),
+            const Text('API de Notificaciones'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Estado: ${apiState.isConnected ? "Conectada" : "Desconectada"}'),
+            if (apiState.lastError != null)
+              Text('Error: ${apiState.lastError}', style: const TextStyle(color: Colors.red)),
+            Text('Notificaciones enviadas: ${apiState.notificationsSent}'),
+            if (apiState.lastUpdate != null)
+              Text('Última actualización: ${apiState.lastUpdate!.toLocal().toString().substring(11, 19)}'),
+            const SizedBox(height: 16),
+            const Text('Logs recientes:', style: TextStyle(fontWeight: FontWeight.bold)),
+            Container(
+              height: 150,
+              width: double.maxFinite,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(8),
+                child: Text(
+                  apiState.logs.reversed.take(10).join('\n'),
+                  style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await _checkApiHealth();
+              context.pop();
+            },
+            child: const Text('Verificar Estado'),
+          ),
+          TextButton(
+            onPressed: () async {
+              context.pop();
+              await _sendTestNotification(userId);
+            },
+            child: const Text('Probar Notificación'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cerrar'),
+          ),
+        ],
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:comaslimpio/core/config/map_token.dart';
+import 'package:comaslimpio/core/services/fcm_service.dart';
 import 'package:comaslimpio/core/services/geocoding_service.dart';
 import 'package:comaslimpio/features/auth/infrastructure/mappers/app_user_mapper.dart';
 import 'package:comaslimpio/features/citizen/presentation/providers/selected_route_provider.dart';
@@ -63,6 +64,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
             .get();
         if (doc.exists) {
           final appUser = AppUserMapper.fromJson(doc.data()!);
+          
+          // Asegurar que el usuario tenga FCM token y campos requeridos
+          await FcmService.instance.ensureUserHasRequiredFields(user.uid);
+          
           state = state.copyWith(
             authStatus: AuthStatus.authenticated,
             userRole: appUser.role,

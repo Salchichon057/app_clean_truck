@@ -13,6 +13,8 @@ class AppUser {
   final String status;
   final Timestamp createdAt;
   final NotificationPreferences notificationPreferences;
+  final String? fcmToken; // Token FCM para notificaciones push
+  final String? selectedRouteId; // ID de la ruta seleccionada (para ciudadanos)
 
   AppUser({
     required this.uid,
@@ -25,6 +27,8 @@ class AppUser {
     required this.status,
     required this.createdAt,
     required this.notificationPreferences,
+    this.fcmToken,
+    this.selectedRouteId,
   });
 
   AppUser copyWith({
@@ -38,6 +42,8 @@ class AppUser {
     String? status,
     Timestamp? createdAt,
     NotificationPreferences? notificationPreferences,
+    String? fcmToken,
+    String? selectedRouteId,
   }) {
     return AppUser(
       uid: uid ?? this.uid,
@@ -51,6 +57,57 @@ class AppUser {
       createdAt: createdAt ?? this.createdAt,
       notificationPreferences:
           notificationPreferences ?? this.notificationPreferences,
+      fcmToken: fcmToken ?? this.fcmToken,
+      selectedRouteId: selectedRouteId ?? this.selectedRouteId,
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'uid': uid,
+      'name': name,
+      'email': email,
+      'phoneNumber': phoneNumber,
+      'dni': dni,
+      'role': role,
+      'location': location.toJson(),
+      'status': status,
+      'createdAt': createdAt,
+      'notificationPreferences': {
+        'daytimeAlerts': notificationPreferences.daytimeAlerts,
+        'nighttimeAlerts': notificationPreferences.nighttimeAlerts,
+        'daytimeStart': notificationPreferences.daytimeStart,
+        'daytimeEnd': notificationPreferences.daytimeEnd,
+        'nighttimeStart': notificationPreferences.nighttimeStart,
+        'nighttimeEnd': notificationPreferences.nighttimeEnd,
+      },
+      if (fcmToken != null) 'fcmToken': fcmToken,
+      if (selectedRouteId != null) 'selectedRouteId': selectedRouteId,
+    };
+  }
+
+  factory AppUser.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    return AppUser(
+      uid: data['uid'] ?? '',
+      name: data['name'] ?? '',
+      email: data['email'] ?? '',
+      phoneNumber: data['phoneNumber'] ?? '',
+      dni: data['dni'] ?? '',
+      role: data['role'] ?? '',
+      location: Location.fromJson(data['location'] ?? {}),
+      status: data['status'] ?? '',
+      createdAt: data['createdAt'] ?? Timestamp.now(),
+      notificationPreferences: NotificationPreferences(
+        daytimeAlerts: data['notificationPreferences']?['daytimeAlerts'] ?? true,
+        nighttimeAlerts: data['notificationPreferences']?['nighttimeAlerts'] ?? false,
+        daytimeStart: data['notificationPreferences']?['daytimeStart'] ?? '06:00',
+        daytimeEnd: data['notificationPreferences']?['daytimeEnd'] ?? '22:00',
+        nighttimeStart: data['notificationPreferences']?['nighttimeStart'] ?? '22:00',
+        nighttimeEnd: data['notificationPreferences']?['nighttimeEnd'] ?? '06:00',
+      ),
+      fcmToken: data['fcmToken'],
+      selectedRouteId: data['selectedRouteId'],
     );
   }
 }
