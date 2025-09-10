@@ -59,6 +59,9 @@ class FirebaseMessagingService {
     if (initialMessage != null) {
       _handleBackgroundMessage(initialMessage);
     }
+
+    // ⚡ NUEVO: Manejar actualización automática de tokens
+    _firebaseMessaging.onTokenRefresh.listen(_onTokenRefresh);
   }
 
   /// Manejar mensajes cuando la app está en primer plano
@@ -112,6 +115,32 @@ class FirebaseMessagingService {
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error saving notification to Firestore: $e');
+      }
+    }
+  }
+
+  /// ⚡ NUEVO: Manejar actualización automática de token FCM
+  static Future<void> _onTokenRefresh(String newToken) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      if (kDebugMode) {
+        print('🔄 FCM Token refreshed: ${newToken.substring(0, 20)}...');
+      }
+
+      // Actualizar token en Firestore
+      await _firestore
+          .collection('app_users')
+          .doc(user.uid)
+          .update({'fcmToken': newToken});
+
+      if (kDebugMode) {
+        print('✅ FCM Token updated in Firestore');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error updating FCM token: $e');
       }
     }
   }
