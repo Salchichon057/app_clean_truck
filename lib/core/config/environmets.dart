@@ -2,7 +2,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Environment {
   static initEnvironment() async {
-    await dotenv.load(fileName: ".env");
+  await dotenv.load(fileName: ".env", isOptional: true);
   }
 
   static String apiUrl = dotenv.env['NOTIFICATION_API_URL'] ?? 'http://localhost:3000';

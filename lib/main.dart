@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:comaslimpio/core/config/environmets.dart';
 import 'package:comaslimpio/core/presentation/theme/app_theme.dart';
+import 'package:comaslimpio/core/services/firebase_messaging_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -15,8 +16,14 @@ Future<void> main() async {
   // Inicializar Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // Configurar manejador de notificaciones en segundo plano
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
   // Inicializar Firebase Messaging y solicitar permisos (iOS)
   await FirebaseMessaging.instance.requestPermission();
+
+  // Inicializar servicio de notificaciones
+  await FirebaseMessagingService.initialize();
 
   // Configurar Firestore para soporte offline a través del servicio
   FirestoreService.instance.configureSettings(

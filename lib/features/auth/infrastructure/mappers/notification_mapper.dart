@@ -13,6 +13,18 @@ class NotificationMapper {
     );
   }
 
+  static Notification fromFirestore(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    return Notification(
+      uid: doc.id, // Usar el ID del documento de Firestore
+      type: data['type'],
+      message: data['message'],
+      routeId: data['routeId'],
+      timestamp: data['timestamp'] as Timestamp,
+      read: data['read'] ?? false,
+    );
+  }
+
   static Map<String, dynamic> toJson(Notification notification) {
     return {
       'uid': notification.uid,

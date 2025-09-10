@@ -18,7 +18,7 @@ class NotificationFirebaseDatasource implements NotificationRepository {
         .orderBy('timestamp', descending: true)
         .get();
     return snapshot.docs
-        .map((doc) => NotificationMapper.fromJson(doc.data()))
+        .map((doc) => NotificationMapper.fromFirestore(doc))
         .toList();
   }
 
@@ -77,7 +77,7 @@ class NotificationFirebaseDatasource implements NotificationRepository {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => NotificationMapper.fromJson(doc.data()))
+              .map((doc) => NotificationMapper.fromFirestore(doc))
               .toList(),
         );
   }
@@ -93,7 +93,7 @@ class NotificationFirebaseDatasource implements NotificationRepository {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => NotificationMapper.fromJson(doc.data()))
+              .map((doc) => NotificationMapper.fromFirestore(doc))
               .toList(),
         );
   }
