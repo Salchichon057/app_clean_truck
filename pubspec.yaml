@@ -35,6 +35,7 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.1
 
 flutter:
   uses-material-design: true
@@ -44,3 +45,22 @@ flutter:
     - .env
     - assets/images/
     - assets/icons/
+
+# Configuración para flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/logo.png"
+  min_sdk_android: 21 # Android 5.0
+  web:
+    generate: true
+    image_path: "assets/icons/logo.png"
+    background_color: "#ffffff"
+    theme_color: "#003b56"
+  windows:
+    generate: true
+    image_path: "assets/icons/logo.png"
+    icon_size: 48 # min:48, max:256, default: 48
+  macos:
+    generate: true
+    image_path: "assets/icons/logo.png"
