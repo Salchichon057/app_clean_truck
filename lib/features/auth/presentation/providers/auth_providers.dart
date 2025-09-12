@@ -4,7 +4,6 @@ import 'package:comaslimpio/core/config/map_token.dart';
 import 'package:comaslimpio/core/services/fcm_service.dart';
 import 'package:comaslimpio/core/services/geocoding_service.dart';
 import 'package:comaslimpio/features/auth/infrastructure/mappers/app_user_mapper.dart';
-import 'package:comaslimpio/features/citizen/presentation/providers/selected_route_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -131,7 +130,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> signOut(WidgetRef ref) async {
-    await ref.read(selectedRouteProvider.notifier).setRoute(null);
+    // No limpiar selectedRoute al hacer logout - debe persistir para notificaciones
     await _authRepository.signOut();
   }
 
