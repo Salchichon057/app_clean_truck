@@ -84,26 +84,19 @@ class _TruckViewRouteScreenState extends ConsumerState<TruckViewRouteScreen> {
           'long': location.long,
         },
       });
-      print('✅ Firestore updated successfully');
     } catch (e) {
-      print('❌ Firestore update error: $e');
+      // Error silencioso
     }
 
     // Enviar a API TypeScript para control total de notificaciones
     try {
       final apiNotifier = ref.read(notificationApiProvider.notifier);
-      final success = await apiNotifier.updateTruckLocation(
+      await apiNotifier.updateTruckLocation(
         userId: userId,
         location: location,
       );
-      
-      if (success) {
-        print('✅ TypeScript API processed notifications successfully');
-      } else {
-        print('❌ TypeScript API notification processing failed');
-      }
     } catch (e) {
-      print('❌ TypeScript API error: $e');
+      // Error silencioso
     }
   }
 

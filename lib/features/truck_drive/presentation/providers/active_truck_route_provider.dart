@@ -12,20 +12,17 @@ final activeTruckRouteProvider = FutureProvider<my_route.Route?>((ref) async {
 
   final truckRepo = ref.watch(truckRepositoryProvider);
   final trucks = await truckRepo.getTrucksByUser(user.uid);
-  print('Trucks for user: ${trucks.map((t) => t.idTruck)}');
 
   if (trucks.isEmpty) return null;
   final truck = trucks.first;
 
   final routeRepo = ref.watch(routeRepositoryProvider);
   final routes = await routeRepo.watchAllRoutes().first;
-  print('Routes: ${routes.map((r) => '${r.idTruck} (${r.status})')}');
 
   final myRoute = routes.firstWhereOrNull(
     (r) =>
         r.idTruck.trim().toLowerCase() == truck.idTruck.trim().toLowerCase() &&
         r.status == 'active',
   );
-  print('My route: $myRoute');
   return myRoute;
 });

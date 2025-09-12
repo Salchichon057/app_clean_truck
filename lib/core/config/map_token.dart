@@ -10,7 +10,6 @@ class MapToken {
       }
       return token;
     } catch (e) {
-      print('Error loading MAP_API_TOKEN: $e');
       return 'No token found';
     }
   }

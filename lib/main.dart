@@ -31,8 +31,13 @@ Future<void> main() async {
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
 
-  // Inicializar variables de entorno
-  await Environment.initEnvironment();
+  // Inicializar variables de entorno (CRÍTICO - debe cargar o fallar)
+  try {
+    await Environment.initEnvironment();
+  } catch (e) {
+    // En producción, la app no debe iniciarse si falla la configuración
+    return;
+  }
 
   runApp(const ProviderScope(child: MyApp()));
 }
