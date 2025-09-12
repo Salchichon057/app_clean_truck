@@ -54,6 +54,8 @@ class LocationPermissionWidget extends ConsumerWidget {
 
   IconData _getIconForStatus(LocationPermissionStatus status) {
     switch (status) {
+      case LocationPermissionStatus.unknown:
+        return Icons.location_searching;
       case LocationPermissionStatus.denied:
         return Icons.location_off;
       case LocationPermissionStatus.deniedForever:
@@ -67,6 +69,8 @@ class LocationPermissionWidget extends ConsumerWidget {
 
   Color _getColorForStatus(LocationPermissionStatus status) {
     switch (status) {
+      case LocationPermissionStatus.unknown:
+        return AppTheme.primary;
       case LocationPermissionStatus.denied:
         return Colors.orange;
       case LocationPermissionStatus.deniedForever:
@@ -80,6 +84,8 @@ class LocationPermissionWidget extends ConsumerWidget {
 
   String _getTitleForStatus(LocationPermissionStatus status) {
     switch (status) {
+      case LocationPermissionStatus.unknown:
+        return 'Configurar ubicación';
       case LocationPermissionStatus.denied:
         return 'Permisos de ubicación requeridos';
       case LocationPermissionStatus.deniedForever:
@@ -93,6 +99,8 @@ class LocationPermissionWidget extends ConsumerWidget {
 
   String _getDescriptionForStatus(LocationPermissionStatus status) {
     switch (status) {
+      case LocationPermissionStatus.unknown:
+        return 'Para mostrarte el mapa con tu ubicación actual, necesitamos permisos de ubicación. Esto mejora tu experiencia en la app.';
       case LocationPermissionStatus.denied:
         return 'Para una mejor experiencia, necesitamos acceso a tu ubicación. Esto nos ayuda a mostrarte el mapa de tu zona.';
       case LocationPermissionStatus.deniedForever:
@@ -106,6 +114,7 @@ class LocationPermissionWidget extends ConsumerWidget {
 
   Widget _buildActionButton(BuildContext context, LocationPermissionStatus status, MapLocationNotifier notifier) {
     switch (status) {
+      case LocationPermissionStatus.unknown:
       case LocationPermissionStatus.denied:
         return ElevatedButton.icon(
           onPressed: () => notifier.requestLocationPermission(),
@@ -118,7 +127,13 @@ class LocationPermissionWidget extends ConsumerWidget {
         );
       case LocationPermissionStatus.deniedForever:
         return ElevatedButton.icon(
-          onPressed: () => Geolocator.openAppSettings(),
+          onPressed: () async {
+            await Geolocator.openAppSettings();
+            // Pequeña pausa para que el usuario pueda cambiar la configuración
+            await Future.delayed(const Duration(seconds: 1));
+            // Refrescar permisos cuando regrese
+            await notifier.refreshPermissions();
+          },
           icon: const Icon(Icons.settings),
           label: const Text('Abrir configuración'),
           style: ElevatedButton.styleFrom(
@@ -128,7 +143,13 @@ class LocationPermissionWidget extends ConsumerWidget {
         );
       case LocationPermissionStatus.serviceDisabled:
         return ElevatedButton.icon(
-          onPressed: () => Geolocator.openLocationSettings(),
+          onPressed: () async {
+            await Geolocator.openLocationSettings();
+            // Pequeña pausa para que el usuario pueda cambiar la configuración
+            await Future.delayed(const Duration(seconds: 1));
+            // Refrescar permisos cuando regrese
+            await notifier.refreshPermissions();
+          },
           icon: const Icon(Icons.gps_fixed),
           label: const Text('Activar ubicación'),
           style: ElevatedButton.styleFrom(

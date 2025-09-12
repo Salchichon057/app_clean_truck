@@ -24,7 +24,7 @@ class RegisterForm extends ConsumerStatefulWidget {
   ConsumerState<RegisterForm> createState() => _RegisterFormState();
 }
 
-class _RegisterFormState extends ConsumerState<RegisterForm> {
+class _RegisterFormState extends ConsumerState<RegisterForm> with WidgetsBindingObserver {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -42,6 +42,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _nameController.addListener(() {
       if (_isProgrammaticChange) return;
       ref
@@ -96,7 +97,21 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    // Cuando la app regresa al primer plano, verificar permisos nuevamente
+    if (state == AppLifecycleState.resumed) {
+      Future(() async {
+        final mapLocationNotifier = ref.read(mapLocationProvider.notifier);
+        await mapLocationNotifier.refreshPermissions();
+      });
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _nameController.dispose();
     _lastNameController.dispose();
     _dniController.dispose();

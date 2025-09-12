@@ -154,6 +154,46 @@ class MapLocationNotifier extends StateNotifier<MapLocationState> {
   void updateCurrentAddress(String address) {
     state = state.copyWith(currentAddress: address);
   }
+
+  // Método para verificar permisos cuando la app regresa al primer plano
+  Future<void> refreshPermissions() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Verificar si los servicios de ubicación están habilitados
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      state = state.copyWith(
+        permissionStatus: LocationPermissionStatus.serviceDisabled,
+      );
+      return;
+    }
+
+    // Verificar permisos actuales
+    permission = await Geolocator.checkPermission();
+    
+    if (permission == LocationPermission.denied) {
+      state = state.copyWith(
+        permissionStatus: LocationPermissionStatus.denied,
+      );
+      return;
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      state = state.copyWith(
+        permissionStatus: LocationPermissionStatus.deniedForever,
+      );
+      return;
+    }
+
+    // Si ahora tenemos permisos y antes no los teníamos, obtener ubicación
+    if (permission == LocationPermission.whileInUse || 
+        permission == LocationPermission.always) {
+      if (state.permissionStatus != LocationPermissionStatus.granted) {
+        await _getCurrentLocation();
+      }
+    }
+  }
 }
 
 final mapLocationProvider =

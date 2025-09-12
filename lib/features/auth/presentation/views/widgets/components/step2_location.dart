@@ -66,72 +66,74 @@ class Step2Location extends ConsumerWidget {
         const SizedBox(height: 8),
         // Widget para manejar permisos de ubicación
         const LocationPermissionWidget(),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 220),
-          child: FutureBuilder<String>(
-            future: MapToken.getMapToken(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (!snapshot.hasData || snapshot.data == 'No token found') {
-                return const Center(child: Text("Failed to load Map Token"));
-              }
+        // Solo mostrar el mapa si tenemos permisos concedidos
+        if (mapLocationState.permissionStatus == LocationPermissionStatus.granted)
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 220),
+            child: FutureBuilder<String>(
+              future: MapToken.getMapToken(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data == 'No token found') {
+                  return const Center(child: Text("Failed to load Map Token"));
+                }
 
-              final mapboxToken = snapshot.data!;
-              final initialCenter =
-                  mapLocationState.selectedLocation ??
-                  mapLocationState.currentLocation ??
-                  Location(lat: -12.0464, long: -77.0428);
-              return Stack(
-                alignment: Alignment.center,
-                children: [
-                  FlutterMap(
-                    mapController: mapController,
-                    options: MapOptions(
-                      initialCenter: LatLng(
-                        initialCenter.lat,
-                        initialCenter.long,
+                final mapboxToken = snapshot.data!;
+                final initialCenter =
+                    mapLocationState.selectedLocation ??
+                    mapLocationState.currentLocation ??
+                    Location(lat: -12.0464, long: -77.0428);
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    FlutterMap(
+                      mapController: mapController,
+                      options: MapOptions(
+                        initialCenter: LatLng(
+                          initialCenter.lat,
+                          initialCenter.long,
+                        ),
+                        initialZoom: 18,
+                        interactionOptions: InteractionOptions(
+                          flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+                          scrollWheelVelocity: 0.06,
+                          keyboardOptions: const KeyboardOptions(),
+                          cursorKeyboardRotationOptions:
+                              CursorKeyboardRotationOptions.disabled(),
+                        ),
+                        onMapEvent: (event) {
+                          if (event is MapEventMoveEnd) {
+                            final center = event.camera.center;
+                            final newLocation = Location(
+                              lat: center.latitude,
+                              long: center.longitude,
+                            );
+                            ref
+                                .read(mapLocationProvider.notifier)
+                                .updateSelectedLocation(newLocation);
+                            ref
+                                .read(registerFormProvider.notifier)
+                                .updateLocation(newLocation);
+                            onReverseGeocode(newLocation);
+                          }
+                        },
                       ),
-                      initialZoom: 18,
-                      interactionOptions: InteractionOptions(
-                        flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
-                        scrollWheelVelocity: 0.06,
-                        keyboardOptions: const KeyboardOptions(),
-                        cursorKeyboardRotationOptions:
-                            CursorKeyboardRotationOptions.disabled(),
-                      ),
-                      onMapEvent: (event) {
-                        if (event is MapEventMoveEnd) {
-                          final center = event.camera.center;
-                          final newLocation = Location(
-                            lat: center.latitude,
-                            long: center.longitude,
-                          );
-                          ref
-                              .read(mapLocationProvider.notifier)
-                              .updateSelectedLocation(newLocation);
-                          ref
-                              .read(registerFormProvider.notifier)
-                              .updateLocation(newLocation);
-                          onReverseGeocode(newLocation);
-                        }
-                      },
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
+                        ),
+                      ],
                     ),
-                    children: [
-                      TileLayer(
-                        urlTemplate:
-                            'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
-                      ),
-                    ],
-                  ),
-                  // Ícono fijo en el centro
-                  const Icon(Icons.location_pin, color: Colors.red, size: 40),
-                ],
-              );
-            },
+                    // Ícono fijo en el centro
+                    const Icon(Icons.location_pin, color: Colors.red, size: 40),
+                  ],
+                );
+              },
+            ),
           ),
-        ),
       ],
     );
   }
