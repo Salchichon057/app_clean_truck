@@ -5,6 +5,7 @@ import 'package:comaslimpio/features/auth/domain/models/app_user.dart';
 import 'package:comaslimpio/features/auth/domain/models/notification_preferences.dart';
 import 'package:comaslimpio/features/auth/domain/repositories/auth_repository.dart';
 import 'package:comaslimpio/features/auth/presentation/providers/auth_providers.dart';
+import 'package:comaslimpio/core/exceptions/auth_exception.dart';
 
 class RegisterViewModel extends StateNotifier<AsyncValue<void>> {
   final AuthRepository _authRepository;
@@ -54,10 +55,19 @@ class RegisterViewModel extends StateNotifier<AsyncValue<void>> {
 
       _ref.read(registerFormProvider.notifier).state = RegisterFormState();
       state = const AsyncValue.data(null);
-    } catch (e) {
+    } on AuthException catch (e) {
+      // Error de autenticación con mensaje user-friendly
       state = AsyncValue.error(e, StackTrace.current);
       _ref.read(registerFormProvider.notifier).state = formState.copyWith(
-        errorMessage: e.toString(),
+        errorMessage: e.message,
+        isSubmitting: false,
+      );
+    } catch (e) {
+      // Error genérico
+      final authError = AuthException.generic('Error inesperado al registrar usuario');
+      state = AsyncValue.error(authError, StackTrace.current);
+      _ref.read(registerFormProvider.notifier).state = formState.copyWith(
+        errorMessage: authError.message,
         isSubmitting: false,
       );
     }

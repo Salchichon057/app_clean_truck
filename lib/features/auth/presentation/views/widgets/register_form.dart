@@ -13,6 +13,8 @@ import 'package:comaslimpio/core/components/map/map_location_provider.dart';
 import 'package:comaslimpio/features/auth/presentation/views/widgets/components/step1_personal_info.dart';
 import 'package:comaslimpio/features/auth/presentation/views/widgets/components/step2_location.dart';
 import 'package:comaslimpio/features/auth/presentation/views/widgets/components/step3_notifications.dart';
+import 'package:comaslimpio/core/exceptions/auth_exception.dart';
+import 'package:comaslimpio/core/widgets/auth_error_dialog.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -309,24 +311,31 @@ class _RegisterFormState extends ConsumerState<RegisterForm> with WidgetsBinding
                               await ref
                                   .read(registerViewModelProvider.notifier)
                                   .submit();
-                              final updatedFormState = ref.read(
-                                registerFormProvider,
+                              
+                              // Verificar el estado después del submit
+                              final registerState = ref.read(registerViewModelProvider);
+                              
+                              registerState.whenOrNull(
+                                error: (error, stackTrace) {
+                                  if (error is AuthException) {
+                                    // Mostrar error de autenticación con diálogo elegante
+                                    context.showAuthError(
+                                      error,
+                                      onRetry: () async {
+                                        Navigator.of(context).pop();
+                                        await ref
+                                            .read(registerViewModelProvider.notifier)
+                                            .submit();
+                                      },
+                                      useDialog: true,
+                                    );
+                                  }
+                                },
+                                data: (_) {
+                                  // Registro exitoso
+                                  context.go('/login');
+                                },
                               );
-                              if (updatedFormState.errorMessage != null &&
-                                  updatedFormState.errorMessage!.isNotEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      updatedFormState.errorMessage!,
-                                    ),
-                                  ),
-                                );
-                                ref
-                                    .read(registerFormProvider.notifier)
-                                    .clearErrorMessage();
-                              } else {
-                                context.go('/login');
-                              }
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0D3B56),
