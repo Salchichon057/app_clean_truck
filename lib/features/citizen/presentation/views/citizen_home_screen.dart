@@ -18,7 +18,7 @@ class CitizenHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final routesAsync = ref.watch(activeRoutesStreamProvider);
     final userLocationState = ref.watch(mapLocationProvider);
-    final selectedRoute = ref.watch(selectedRouteProvider);
+    final my_route.Route? selectedRoute = ref.watch(selectedRouteProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -41,6 +41,7 @@ class CitizenHomeScreen extends ConsumerWidget {
       body: _CitizenMapBody(
         routesAsync: routesAsync,
         userLocationState: userLocationState,
+        selectedRoute: selectedRoute,
       ),
     );
   }
@@ -49,10 +50,12 @@ class CitizenHomeScreen extends ConsumerWidget {
 class _CitizenMapBody extends ConsumerStatefulWidget {
   final AsyncValue<List<my_route.Route>> routesAsync;
   final MapLocationState userLocationState;
+  final my_route.Route? selectedRoute;
 
   const _CitizenMapBody({
     required this.routesAsync,
     required this.userLocationState,
+    required this.selectedRoute,
   });
 
   @override
@@ -186,14 +189,16 @@ class _CitizenMapBodyState extends ConsumerState<_CitizenMapBody> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              RawMaterialButton(
-                onPressed: () => context.push('/report-incident'),
-                fillColor: Theme.of(context).primaryColor,
-                shape: const CircleBorder(),
-                padding: const EdgeInsets.all(16),
-                child: const Icon(Icons.edit, color: Colors.white),
-              ),
-              const SizedBox(height: 16),
+              // Solo mostrar el botón de reportar incidentes si hay una ruta seleccionada
+              if (widget.selectedRoute != null)
+                RawMaterialButton(
+                  onPressed: () => context.push('/report-incident'),
+                  fillColor: Theme.of(context).primaryColor,
+                  shape: const CircleBorder(),
+                  padding: const EdgeInsets.all(16),
+                  child: const Icon(Icons.edit, color: Colors.white),
+                ),
+              if (widget.selectedRoute != null) const SizedBox(height: 16),
               RawMaterialButton(
                 onPressed: () {
                   if (userLocation != null && _mapReady) {
