@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:comaslimpio/core/models/location.dart';
 import 'package:comaslimpio/core/components/map/map_location_provider.dart';
+import 'package:comaslimpio/core/components/map/location_permission_widget.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class Step2Location extends ConsumerWidget {
@@ -63,6 +64,8 @@ class Step2Location extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 8),
+        // Widget para manejar permisos de ubicación
+        const LocationPermissionWidget(),
         ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 220),
           child: FutureBuilder<String>(

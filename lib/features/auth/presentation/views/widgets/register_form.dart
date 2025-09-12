@@ -80,10 +80,14 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
     });
 
     if (!_isLocationInitialized) {
-      final mapLocationNotifier = ref.read(mapLocationProvider.notifier);
-      mapLocationNotifier.initLocation().then((_) {
+      // Diferir la inicialización hasta después del build
+      Future(() async {
+        final mapLocationNotifier = ref.read(mapLocationProvider.notifier);
+        await mapLocationNotifier.initLocation();
         final mapLocationState = ref.read(mapLocationProvider);
-        if (mapLocationState.currentLocation != null) {
+        // Solo auto-confirmar si tenemos ubicación Y permisos concedidos
+        if (mapLocationState.currentLocation != null && 
+            mapLocationState.permissionStatus == LocationPermissionStatus.granted) {
           _confirmLocation();
           _isLocationInitialized = true;
         }
