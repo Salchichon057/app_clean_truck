@@ -1,9 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:comaslimpio/core/services/notification_preferences_service.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Mostrar diálogo de notificaciones después de que se construya la pantalla
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndShowNotificationDialog();
+    });
+  }
+
+  Future<void> _checkAndShowNotificationDialog() async {
+    if (await NotificationPreferencesService.isFirstTimeAskingPermissions()) {
+      if (mounted) {
+        await NotificationPreferencesService.showNotificationPermissionDialog(context);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

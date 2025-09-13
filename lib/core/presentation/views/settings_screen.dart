@@ -1,15 +1,47 @@
 import 'package:comaslimpio/core/presentation/widgets/location_map_preview.dart';
+import 'package:comaslimpio/core/services/notification_preferences_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:comaslimpio/features/auth/presentation/providers/auth_providers.dart';
 import 'package:comaslimpio/core/presentation/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  bool _notificationsEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotificationPreferences();
+  }
+
+  Future<void> _loadNotificationPreferences() async {
+    final enabled = await NotificationPreferencesService.areNotificationsEnabled();
+    setState(() {
+      _notificationsEnabled = enabled;
+    });
+  }
+
+  Future<void> _toggleNotifications(bool value) async {
+    if (value) {
+      await NotificationPreferencesService.enableNotifications();
+    } else {
+      await NotificationPreferencesService.disableNotifications();
+    }
+    setState(() {
+      _notificationsEnabled = value;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final addressAsync = ref.watch(userAddressProvider);
 
@@ -94,6 +126,43 @@ class SettingsScreen extends ConsumerWidget {
                                         ),
                                       ),
                                       const SizedBox(height: 16),
+                                      
+                                      // Sección de Notificaciones
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.background,
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color: AppTheme.tertiary.withValues(alpha: 0.3),
+                                          ),
+                                        ),
+                                        child: SwitchListTile(
+                                          title: const Text(
+                                            'Notificaciones',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              color: AppTheme.primary,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          subtitle: const Text(
+                                            'Recibir avisos cuando el camión pase por su domicilio',
+                                            style: TextStyle(
+                                              color: Colors.black54,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          value: _notificationsEnabled,
+                                          onChanged: _toggleNotifications,
+                                          activeColor: AppTheme.tertiary,
+                                          contentPadding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 4,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      
                                       LocationMapPreview(
                                         location: user.location,
                                         height: 160,
