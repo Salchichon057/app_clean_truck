@@ -20,11 +20,13 @@ class AddTruckDriverViewModel extends StateNotifier<AsyncValue<void>> {
     if (!form.isValid) {
       ref
           .read(addTruckDriverFormProvider.notifier)
-          .setError('Formulario inválido');
+          .setError('Por favor completa todos los campos correctamente');
       return;
     }
+    
     state = const AsyncValue.loading();
     ref.read(addTruckDriverFormProvider.notifier).setSubmitting(true);
+    
     try {
       // Usa FirestoreService para verificar si ya existe el usuario
       final existingStream = firestoreService.streamCollectionWhere(
@@ -33,6 +35,7 @@ class AddTruckDriverViewModel extends StateNotifier<AsyncValue<void>> {
         form.email.value.trim(),
       );
       final existingSnapshot = await existingStream.first;
+      
       if (existingSnapshot.docs.isNotEmpty) {
         ref
             .read(addTruckDriverFormProvider.notifier)
@@ -46,6 +49,7 @@ class AddTruckDriverViewModel extends StateNotifier<AsyncValue<void>> {
       final callable = FirebaseFunctions.instance.httpsCallable(
         'createTruckDriver',
       );
+      
       final result = await callable.call({
         'email': form.email.value.trim(),
         'password': form.password.value.trim(),
@@ -54,18 +58,31 @@ class AddTruckDriverViewModel extends StateNotifier<AsyncValue<void>> {
         'phoneNumber': form.phone.trim(),
       });
 
-      print('Resultado función Cloud: ${result.data}');
+      print('Conductor creado exitosamente: ${result.data}');
+      
+      // Solo limpiar formulario si fue exitoso
       ref.read(addTruckDriverFormProvider.notifier).clear();
       state = const AsyncValue.data(null);
+      
     } catch (e, st) {
-      print('Error al crear usuario: $e');
+      print('Error al crear conductor: $e');
       print('StackTrace: $st');
+      
+      // Mensaje de error más amigable
+      String errorMessage = 'Error al crear el conductor';
+      if (e.toString().contains('email')) {
+        errorMessage = 'El correo electrónico ya está en uso';
+      } else if (e.toString().contains('network')) {
+        errorMessage = 'Error de conexión. Verifica tu internet';
+      }
+      
       ref
           .read(addTruckDriverFormProvider.notifier)
-          .setError('Error: ${e.toString()}');
-      state = AsyncValue.error(e, StackTrace.current);
+          .setError(errorMessage);
+      state = AsyncValue.error(e, st);
+    } finally {
+      ref.read(addTruckDriverFormProvider.notifier).setSubmitting(false);
     }
-    ref.read(addTruckDriverFormProvider.notifier).setSubmitting(false);
   }
 }
 

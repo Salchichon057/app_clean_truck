@@ -178,14 +178,29 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
                   onPressed: viewModel.isLoading
                       ? null
                       : () async {
+                          // Ejecutar submit y esperar resultado
                           await ref
                               .read(addTruckDriverViewModelProvider.notifier)
                               .submit();
+                          
+                          if (!mounted) return;
+                          
                           final error = ref
                               .read(addTruckDriverFormProvider)
                               .errorMessage;
-                          if (error == null && mounted)
+                          
+                          if (error == null) {
+                            // Éxito: mostrar SnackBar y cerrar diálogo
                             Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Conductor agregado correctamente'),
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                          // Si hay error, se muestra en el Text widget de arriba
                         },
                   child: viewModel.isLoading
                       ? const SizedBox(
