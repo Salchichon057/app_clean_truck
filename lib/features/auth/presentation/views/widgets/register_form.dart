@@ -394,15 +394,15 @@ class _RegisterFormState extends ConsumerState<RegisterForm> with WidgetsBinding
                                   }
                                 },
                                 data: (_) {
-                                  // Registro exitoso
+                                  // Registro exitoso - Firebase inicia sesión automáticamente
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Registro exitoso. Inicia sesión para continuar'),
+                                      content: Text('Registro exitoso'),
                                       backgroundColor: Colors.green,
-                                      duration: Duration(seconds: 3),
+                                      duration: Duration(seconds: 2),
                                     ),
                                   );
-                                  context.go('/login');
+                                  // No redirigir a login, el authStateChanges se encarga de la navegación
                                 },
                               );
                             },
