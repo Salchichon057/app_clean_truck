@@ -18,11 +18,20 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
   late final TextEditingController _emailController;
   late final TextEditingController _phoneController;
   late final TextEditingController _passwordController;
+  late final ScrollController _scrollController;
   bool _obscurePassword = true;
+  
+  // Keys para cada campo
+  final GlobalKey _nameKey = GlobalKey();
+  final GlobalKey _dniKey = GlobalKey();
+  final GlobalKey _emailKey = GlobalKey();
+  final GlobalKey _phoneKey = GlobalKey();
+  final GlobalKey _passwordKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
     final form = ref.read(addTruckDriverFormProvider);
     _nameController = TextEditingController(text: form.name.value);
     _dniController = TextEditingController(text: form.dni.value);
@@ -38,7 +47,38 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+  
+  void _scrollToFirstError() {
+    final form = ref.read(addTruckDriverFormProvider);
+    GlobalKey? firstErrorKey;
+    
+    if (form.name.errorMessage != null) {
+      firstErrorKey = _nameKey;
+    } else if (form.dni.errorMessage != null) {
+      firstErrorKey = _dniKey;
+    } else if (form.email.errorMessage != null) {
+      firstErrorKey = _emailKey;
+    } else if (form.phone.trim().isEmpty) {
+      firstErrorKey = _phoneKey;
+    } else if (form.password.errorMessage != null) {
+      firstErrorKey = _passwordKey;
+    }
+    
+    if (firstErrorKey != null) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        final context = firstErrorKey?.currentContext;
+        if (context != null) {
+          Scrollable.ensureVisible(
+            context,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    }
   }
 
   @override
@@ -65,6 +105,7 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
         child: SingleChildScrollView(
+          controller: _scrollController,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -78,6 +119,7 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
               ),
               const SizedBox(height: 18),
               TextField(
+                key: _nameKey,
                 controller: _nameController,
                 decoration: _inputDecoration(
                   label: 'Nombre completo',
@@ -89,6 +131,7 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
               ),
               const SizedBox(height: 12),
               TextField(
+                key: _dniKey,
                 controller: _dniController,
                 keyboardType: TextInputType.number,
                 maxLength: 8,
@@ -102,6 +145,7 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
               ),
               const SizedBox(height: 12),
               TextField(
+                key: _emailKey,
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: _inputDecoration(
@@ -115,6 +159,7 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
               ),
               const SizedBox(height: 12),
               TextField(
+                key: _phoneKey,
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 maxLength: 9,
@@ -131,6 +176,7 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
               ),
               const SizedBox(height: 12),
               TextField(
+                key: _passwordKey,
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: _inputDecoration(
@@ -199,6 +245,9 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
                                 duration: Duration(seconds: 3),
                               ),
                             );
+                          } else {
+                            // Error: hacer scroll al primer campo con error
+                            _scrollToFirstError();
                           }
                           // Si hay error, se muestra en el Text widget de arriba
                         },

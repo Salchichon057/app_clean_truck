@@ -20,7 +20,7 @@ class AddTruckDriverViewModel extends StateNotifier<AsyncValue<void>> {
     if (!form.isValid) {
       ref
           .read(addTruckDriverFormProvider.notifier)
-          .setError('Por favor completa todos los campos correctamente');
+          .setError('Formulario inválido. Complete los campos obligatorios');
       return;
     }
     
