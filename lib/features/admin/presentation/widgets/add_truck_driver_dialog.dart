@@ -36,7 +36,7 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
     _nameController = TextEditingController(text: form.name.value);
     _dniController = TextEditingController(text: form.dni.value);
     _emailController = TextEditingController(text: form.email.value);
-    _phoneController = TextEditingController(text: form.phone);
+    _phoneController = TextEditingController(text: form.phone.value);
     _passwordController = TextEditingController(text: form.password.value);
   }
 
@@ -61,7 +61,7 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
       firstErrorKey = _dniKey;
     } else if (form.email.errorMessage != null) {
       firstErrorKey = _emailKey;
-    } else if (form.phone.trim().isEmpty) {
+    } else if (form.phone.errorMessage != null) {
       firstErrorKey = _phoneKey;
     } else if (form.password.errorMessage != null) {
       firstErrorKey = _passwordKey;
@@ -94,7 +94,7 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
     _emailController.value = _emailController.value.copyWith(
       text: form.email.value,
     );
-    _phoneController.value = _phoneController.value.copyWith(text: form.phone);
+    _phoneController.value = _phoneController.value.copyWith(text: form.phone.value);
     _passwordController.value = _passwordController.value.copyWith(
       text: form.password.value,
     );
@@ -122,7 +122,7 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
                 key: _nameKey,
                 controller: _nameController,
                 decoration: _inputDecoration(
-                  label: 'Nombre completo',
+                  label: 'Nombre completo *',
                   icon: Icons.person,
                   errorText: form.name.errorMessage,
                 ),
@@ -136,7 +136,7 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
                 keyboardType: TextInputType.number,
                 maxLength: 8,
                 decoration: _inputDecoration(
-                  label: 'DNI',
+                  label: 'DNI *',
                   icon: Icons.badge,
                   errorText: form.dni.errorMessage,
                 ),
@@ -149,7 +149,7 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: _inputDecoration(
-                  label: 'Correo electrónico',
+                  label: 'Correo electrónico *',
                   icon: Icons.email,
                   errorText: form.email.errorMessage,
                 ),
@@ -164,11 +164,9 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
                 keyboardType: TextInputType.phone,
                 maxLength: 9,
                 decoration: _inputDecoration(
-                  label: 'Teléfono',
+                  label: 'Teléfono *',
                   icon: Icons.phone,
-                  errorText: form.phone.trim().isEmpty
-                      ? 'Campo requerido'
-                      : null,
+                  errorText: form.phone.errorMessage,
                 ),
                 onChanged: (v) => ref
                     .read(addTruckDriverFormProvider.notifier)
@@ -180,7 +178,7 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: _inputDecoration(
-                  label: 'Contraseña',
+                  label: 'Contraseña *',
                   icon: Icons.lock,
                   errorText: form.password.errorMessage,
                   suffixIcon: IconButton(

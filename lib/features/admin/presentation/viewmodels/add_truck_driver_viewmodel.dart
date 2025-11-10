@@ -55,7 +55,7 @@ class AddTruckDriverViewModel extends StateNotifier<AsyncValue<void>> {
         'password': form.password.value.trim(),
         'name': form.name.value.trim(),
         'dni': form.dni.value.trim(),
-        'phoneNumber': form.phone.trim(),
+        'phoneNumber': form.phone.value.trim(),
       });
 
       print('Conductor creado exitosamente: ${result.data}');

@@ -1,4 +1,3 @@
-import 'package:comaslimpio/core/components/map/map_location_provider.dart';
 import 'package:comaslimpio/core/presentation/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +9,8 @@ import 'package:comaslimpio/features/admin/domain/models/route.dart'
     as my_route;
 import 'package:comaslimpio/features/admin/presentation/providers/route_provider.dart';
 import 'package:comaslimpio/features/citizen/presentation/providers/selected_route_provider.dart';
+import 'package:comaslimpio/features/auth/presentation/providers/auth_providers.dart';
+import 'package:comaslimpio/features/auth/domain/models/app_user.dart';
 
 class CitizenHomeScreen extends ConsumerWidget {
   const CitizenHomeScreen({super.key});
@@ -17,7 +18,7 @@ class CitizenHomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final routesAsync = ref.watch(activeRoutesStreamProvider);
-    final userLocationState = ref.watch(mapLocationProvider);
+    final currentUser = ref.watch(currentUserProvider);
     final my_route.Route? selectedRoute = ref.watch(selectedRouteProvider);
 
     return Scaffold(
@@ -40,7 +41,7 @@ class CitizenHomeScreen extends ConsumerWidget {
       ),
       body: _CitizenMapBody(
         routesAsync: routesAsync,
-        userLocationState: userLocationState,
+        currentUser: currentUser,
         selectedRoute: selectedRoute,
       ),
     );
@@ -49,12 +50,12 @@ class CitizenHomeScreen extends ConsumerWidget {
 
 class _CitizenMapBody extends ConsumerStatefulWidget {
   final AsyncValue<List<my_route.Route>> routesAsync;
-  final MapLocationState userLocationState;
+  final AppUser? currentUser;
   final my_route.Route? selectedRoute;
 
   const _CitizenMapBody({
     required this.routesAsync,
-    required this.userLocationState,
+    required this.currentUser,
     required this.selectedRoute,
   });
 
@@ -74,9 +75,9 @@ class _CitizenMapBodyState extends ConsumerState<_CitizenMapBody> {
   }
 
   void _centerOnUser() {
-    final userLocation = widget.userLocationState.currentLocation;
-    if (userLocation != null && _mapReady) {
-      final userLatLng = LatLng(userLocation.lat, userLocation.long);
+    final userHomeLocation = widget.currentUser?.location;
+    if (userHomeLocation != null && _mapReady) {
+      final userLatLng = LatLng(userHomeLocation.lat, userHomeLocation.long);
       mapController.move(userLatLng, 16);
       _lastCentered = userLatLng;
     }
@@ -85,9 +86,9 @@ class _CitizenMapBodyState extends ConsumerState<_CitizenMapBody> {
   @override
   void didUpdateWidget(covariant _CitizenMapBody oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final userLocation = widget.userLocationState.currentLocation;
-    if (userLocation != null && _mapReady) {
-      final userLatLng = LatLng(userLocation.lat, userLocation.long);
+    final userHomeLocation = widget.currentUser?.location;
+    if (userHomeLocation != null && _mapReady) {
+      final userLatLng = LatLng(userHomeLocation.lat, userHomeLocation.long);
       if (_lastCentered == null || _lastCentered != userLatLng) {
         mapController.move(userLatLng, 16);
         _lastCentered = userLatLng;
@@ -97,7 +98,7 @@ class _CitizenMapBodyState extends ConsumerState<_CitizenMapBody> {
 
   @override
   Widget build(BuildContext context) {
-    final userLocation = widget.userLocationState.currentLocation;
+    final userHomeLocation = widget.currentUser?.location;
     final selectedRoute = ref.watch(selectedRouteProvider);
 
     if (selectedRoute == null) {
@@ -124,8 +125,8 @@ class _CitizenMapBodyState extends ConsumerState<_CitizenMapBody> {
                 final route = selectedRoute;
 
                 LatLng initialCenter = const LatLng(-12.0464, -77.0428);
-                if (userLocation != null) {
-                  initialCenter = LatLng(userLocation.lat, userLocation.long);
+                if (userHomeLocation != null) {
+                  initialCenter = LatLng(userHomeLocation.lat, userHomeLocation.long);
                 } else if (route.points.isNotEmpty) {
                   initialCenter = LatLng(
                     route.points.first.lat,
@@ -166,11 +167,11 @@ class _CitizenMapBodyState extends ConsumerState<_CitizenMapBody> {
                           ),
                         ],
                       ),
-                    if (userLocation != null)
+                    if (userHomeLocation != null)
                       MarkerLayer(
                         markers: [
                           Marker(
-                            point: LatLng(userLocation.lat, userLocation.long),
+                            point: LatLng(userHomeLocation.lat, userHomeLocation.long),
                             width: 40,
                             height: 40,
                             child: const Icon(
@@ -207,9 +208,9 @@ class _CitizenMapBodyState extends ConsumerState<_CitizenMapBody> {
               if (widget.selectedRoute != null) const SizedBox(height: 16),
               RawMaterialButton(
                 onPressed: () {
-                  if (userLocation != null && _mapReady) {
+                  if (userHomeLocation != null && _mapReady) {
                     mapController.move(
-                      LatLng(userLocation.lat, userLocation.long),
+                      LatLng(userHomeLocation.lat, userHomeLocation.long),
                       16,
                     );
                   } else {

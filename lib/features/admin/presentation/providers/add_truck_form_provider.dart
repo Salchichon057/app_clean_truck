@@ -3,13 +3,14 @@ import 'package:comaslimpio/core/inputs/full_name.dart';
 import 'package:comaslimpio/core/inputs/dni.dart';
 import 'package:comaslimpio/core/inputs/email.dart';
 import 'package:comaslimpio/core/inputs/password.dart';
+import 'package:comaslimpio/core/inputs/phone.dart';
 
 class AddTruckDriverFormState {
   final FullName name;
   final Dni dni;
   final Email email;
   final Password password;
-  final String phone;
+  final Phone phone;
   final bool isValid;
   final String? errorMessage;
   final bool isSubmitting;
@@ -19,7 +20,7 @@ class AddTruckDriverFormState {
     this.dni = const Dni.pure(),
     this.email = const Email.pure(),
     this.password = const Password.pure(),
-    this.phone = '',
+    this.phone = const Phone.pure(),
     this.isValid = false,
     this.errorMessage,
     this.isSubmitting = false,
@@ -30,7 +31,7 @@ class AddTruckDriverFormState {
     Dni? dni,
     Email? email,
     Password? password,
-    String? phone,
+    Phone? phone,
     bool? isValid,
     String? errorMessage,
     bool? isSubmitting,
@@ -73,7 +74,8 @@ class AddTruckDriverFormNotifier
   }
 
   void updatePhone(String value) {
-    state = state.copyWith(phone: value, isValid: _isFormValid());
+    final phone = Phone.dirty(value);
+    state = state.copyWith(phone: phone, isValid: _isFormValid());
   }
 
   bool _isFormValid() {
@@ -81,7 +83,7 @@ class AddTruckDriverFormNotifier
         state.dni.isValid &&
         state.email.isValid &&
         state.password.isValid &&
-        state.phone.trim().isNotEmpty;
+        state.phone.isValid;
   }
 
   void setError(String? error) {
