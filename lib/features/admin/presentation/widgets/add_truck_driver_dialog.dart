@@ -67,15 +67,22 @@ class _AddTruckDriverDialogState extends ConsumerState<AddTruckDriverDialog> {
       firstErrorKey = _passwordKey;
     }
     
-    if (firstErrorKey != null) {
-      Future.delayed(const Duration(milliseconds: 100), () {
+    if (firstErrorKey != null && mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        
         final context = firstErrorKey?.currentContext;
-        if (context != null) {
-          Scrollable.ensureVisible(
-            context,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
+        if (context != null && _scrollController.hasClients) {
+          try {
+            Scrollable.ensureVisible(
+              context,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          } catch (e) {
+            // Ignorar errores del mouse tracker en caso de que ocurran
+            print('Error al hacer scroll: $e');
+          }
         }
       });
     }

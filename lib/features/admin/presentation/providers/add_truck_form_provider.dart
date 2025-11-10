@@ -94,6 +94,17 @@ class AddTruckDriverFormNotifier
     state = state.copyWith(isSubmitting: submitting);
   }
 
+  void validateAllFields() {
+    state = state.copyWith(
+      name: FullName.dirty(state.name.value),
+      dni: Dni.dirty(state.dni.value),
+      email: Email.dirty(state.email.value),
+      phone: Phone.dirty(state.phone.value),
+      password: Password.dirty(state.password.value),
+      isValid: _isFormValid(),
+    );
+  }
+
   void clear() {
     state = AddTruckDriverFormState();
   }

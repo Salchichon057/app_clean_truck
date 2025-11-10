@@ -14,18 +14,21 @@ class AddTruckDriverViewModel extends StateNotifier<AsyncValue<void>> {
   );
 
   Future<void> submit() async {
+    final formNotifier = ref.read(addTruckDriverFormProvider.notifier);
+    
+    // Marcar todos los campos como "dirty" para mostrar errores
+    formNotifier.validateAllFields();
+    
     final form = ref.read(addTruckDriverFormProvider);
     final firestoreService = ref.read(firestoreServiceProvider);
 
     if (!form.isValid) {
-      ref
-          .read(addTruckDriverFormProvider.notifier)
-          .setError('Formulario inválido. Complete los campos obligatorios');
+      formNotifier.setError('Formulario inválido. Complete los campos obligatorios');
       return;
     }
     
     state = const AsyncValue.loading();
-    ref.read(addTruckDriverFormProvider.notifier).setSubmitting(true);
+    formNotifier.setSubmitting(true);
     
     try {
       // Usa FirestoreService para verificar si ya existe el usuario
@@ -37,11 +40,9 @@ class AddTruckDriverViewModel extends StateNotifier<AsyncValue<void>> {
       final existingSnapshot = await existingStream.first;
       
       if (existingSnapshot.docs.isNotEmpty) {
-        ref
-            .read(addTruckDriverFormProvider.notifier)
-            .setError('Ya existe un usuario con ese correo.');
+        formNotifier.setError('Ya existe un usuario con ese correo.');
         state = const AsyncValue.data(null);
-        ref.read(addTruckDriverFormProvider.notifier).setSubmitting(false);
+        formNotifier.setSubmitting(false);
         return;
       }
 
@@ -61,7 +62,7 @@ class AddTruckDriverViewModel extends StateNotifier<AsyncValue<void>> {
       print('Conductor creado exitosamente: ${result.data}');
       
       // Solo limpiar formulario si fue exitoso
-      ref.read(addTruckDriverFormProvider.notifier).clear();
+      formNotifier.clear();
       state = const AsyncValue.data(null);
       
     } catch (e, st) {
@@ -76,12 +77,10 @@ class AddTruckDriverViewModel extends StateNotifier<AsyncValue<void>> {
         errorMessage = 'Error de conexión. Verifica tu internet';
       }
       
-      ref
-          .read(addTruckDriverFormProvider.notifier)
-          .setError(errorMessage);
+      formNotifier.setError(errorMessage);
       state = AsyncValue.error(e, st);
     } finally {
-      ref.read(addTruckDriverFormProvider.notifier).setSubmitting(false);
+      formNotifier.setSubmitting(false);
     }
   }
 }
