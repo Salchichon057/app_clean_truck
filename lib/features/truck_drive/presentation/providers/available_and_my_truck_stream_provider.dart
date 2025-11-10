@@ -17,11 +17,21 @@ final availableAndMyTruckStreamProvider = StreamProvider<List<Truck>>((ref) {
     availableStream,
     myTruckStream,
     (available, mine) {
-      final all = [...available, ...mine];
+      // Usar un Map para evitar duplicados basado en idTruck
       final unique = <String, Truck>{};
-      for (final t in all) {
+      
+      // Primero agregar los camiones del usuario (tienen prioridad)
+      for (final t in mine) {
         unique[t.idTruck] = t;
       }
+      
+      // Luego agregar los disponibles solo si no están ya en el mapa
+      for (final t in available) {
+        if (!unique.containsKey(t.idTruck)) {
+          unique[t.idTruck] = t;
+        }
+      }
+      
       return unique.values.toList();
     },
   );

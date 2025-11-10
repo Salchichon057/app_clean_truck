@@ -211,6 +211,15 @@ class AdminMapsScreen extends ConsumerWidget {
                                 InteractiveFlag.pinchZoom |
                                 InteractiveFlag.drag,
                           ),
+                          onMapReady: () {
+                            // Forzar renderizado con un pequeño movimiento
+                            Future.delayed(const Duration(milliseconds: 100), () {
+                              final center = points.isNotEmpty
+                                  ? points.first
+                                  : const LatLng(-11.9498, -77.0622);
+                              mapController.move(center, 14);
+                            });
+                          },
                         ),
                         children: [
                           TileLayer(

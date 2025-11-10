@@ -46,7 +46,10 @@ class LoginFormNotifier extends StateNotifier<LoginFormState> {
 
   void onEmailChanged(String value) {
     final newEmail = Email.dirty(value);
-    state = state.copyWith(email: newEmail, isValid: newEmail.isValid);
+    state = state.copyWith(
+      email: newEmail,
+      isValid: Formz.validate([newEmail, state.password]),
+    );
   }
 
   void onPasswordChanged(String value) {

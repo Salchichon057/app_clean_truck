@@ -214,6 +214,37 @@ class _RegisterFormState extends ConsumerState<RegisterForm> with WidgetsBinding
                 }),
               ),
               const SizedBox(height: 16),
+              
+              // Mostrar mensaje de error general si existe
+              if (formState.errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            formState.errorMessage!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              
               if (formState.step == 0)
                 Step1PersonalInfo(
                   nameController: _nameController,
@@ -296,26 +327,48 @@ class _RegisterFormState extends ConsumerState<RegisterForm> with WidgetsBinding
                     child: ElevatedButton(
                       onPressed: formState.step < 2
                           ? () {
-                              ref
+                              // Validar paso actual antes de avanzar
+                              final error = ref
                                   .read(registerFormProvider.notifier)
                                   .nextStep();
+                              
+                              if (error != null) {
+                                // Mostrar error si la validación falla
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(error),
+                                    backgroundColor: Colors.orange,
+                                    duration: const Duration(seconds: 3),
+                                  ),
+                                );
+                              }
                             }
-                          : registerState.isLoading
+                          : (registerState.isLoading || formState.isSubmitting)
                           ? null
                           : () async {
-                              final formState = ref.read(registerFormProvider);
-                              if (!formState.isValid ||
-                                  formState.location == null) {
+                              final currentFormState = ref.read(registerFormProvider);
+                              if (!currentFormState.isValid ||
+                                  currentFormState.location == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Por favor completa todos los campos'),
+                                    backgroundColor: Colors.orange,
+                                  ),
+                                );
                                 return;
                               }
+                              
+                              // Ejecutar submit
                               await ref
                                   .read(registerViewModelProvider.notifier)
                                   .submit();
                               
-                              // Verificar el estado después del submit
-                              final registerState = ref.read(registerViewModelProvider);
+                              if (!mounted) return;
                               
-                              registerState.whenOrNull(
+                              // Verificar el estado después del submit
+                              final finalRegisterState = ref.read(registerViewModelProvider);
+                              
+                              finalRegisterState.whenOrNull(
                                 error: (error, stackTrace) {
                                   if (error is AuthException) {
                                     // Mostrar error de autenticación con diálogo elegante
@@ -329,10 +382,26 @@ class _RegisterFormState extends ConsumerState<RegisterForm> with WidgetsBinding
                                       },
                                       useDialog: true,
                                     );
+                                  } else {
+                                    // Error genérico
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Error: ${error.toString()}'),
+                                        backgroundColor: Colors.red,
+                                        duration: const Duration(seconds: 5),
+                                      ),
+                                    );
                                   }
                                 },
                                 data: (_) {
                                   // Registro exitoso
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Registro exitoso. Inicia sesión para continuar'),
+                                      backgroundColor: Colors.green,
+                                      duration: Duration(seconds: 3),
+                                    ),
+                                  );
                                   context.go('/login');
                                 },
                               );
@@ -344,10 +413,14 @@ class _RegisterFormState extends ConsumerState<RegisterForm> with WidgetsBinding
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: registerState.isLoading
-                          ? const CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 1,
+                      child: (registerState.isLoading || formState.isSubmitting)
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
                             )
                           : Text(
                               formState.step < 2 ? 'Siguiente' : 'Registrarse',

@@ -119,6 +119,15 @@ class Step2Location extends ConsumerWidget {
                             onReverseGeocode(newLocation);
                           }
                         },
+                        onMapReady: () {
+                          // Forzar renderizado con un pequeño movimiento
+                          Future.delayed(const Duration(milliseconds: 100), () {
+                            mapController.move(
+                              LatLng(initialCenter.lat, initialCenter.long),
+                              18,
+                            );
+                          });
+                        },
                       ),
                       children: [
                         TileLayer(

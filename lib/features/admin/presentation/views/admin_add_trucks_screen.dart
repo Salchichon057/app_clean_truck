@@ -220,6 +220,16 @@ class _TruckCard extends ConsumerWidget {
                           truckViewModelProvider.notifier,
                         );
                         await truckNotifier.deleteTruck(truck.idTruck);
+                      } else if (confirmed == false) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Eliminación cancelada'),
+                              backgroundColor: Colors.orange,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
                       }
                     }
                   },

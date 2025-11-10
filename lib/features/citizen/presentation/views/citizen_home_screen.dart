@@ -141,6 +141,12 @@ class _CitizenMapBodyState extends ConsumerState<_CitizenMapBody> {
                     onMapReady: () {
                       _mapReady = true;
                       _centerOnUser();
+                      // Forzar renderizado con un pequeño movimiento
+                      Future.delayed(const Duration(milliseconds: 100), () {
+                        if (mounted) {
+                          mapController.move(initialCenter, 16);
+                        }
+                      });
                     },
                   ),
                   children: [

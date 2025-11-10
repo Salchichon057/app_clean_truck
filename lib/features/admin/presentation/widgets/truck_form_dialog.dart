@@ -172,7 +172,36 @@ class _TruckFormDialogState extends ConsumerState<TruckFormDialog> {
                   children: [
                     Expanded(
                       child: TextButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Confirmar cancelación'),
+                              content: const Text(
+                                '¿Estás seguro de cancelar? Se perderán los cambios realizados.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: const Text('No'),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.primary,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  onPressed: () =>
+                                      Navigator.pop(context, true),
+                                  child: const Text('Sí, cancelar'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirmed == true && mounted) {
+                            Navigator.pop(context);
+                          }
+                        },
                         child: const Text(
                           'Cancelar',
                           style: TextStyle(

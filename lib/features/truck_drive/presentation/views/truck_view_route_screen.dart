@@ -181,7 +181,15 @@ class _TruckViewRouteScreenState extends ConsumerState<TruckViewRouteScreen> {
                 options: MapOptions(
                   initialCenter: initialCenter,
                   initialZoom: 16,
-                  onMapReady: () => setState(() => _mapReady = true),
+                  onMapReady: () {
+                    setState(() => _mapReady = true);
+                    // Forzar renderizado con un pequeño movimiento
+                    Future.delayed(const Duration(milliseconds: 100), () {
+                      if (mounted) {
+                        mapController.move(initialCenter, 16);
+                      }
+                    });
+                  },
                 ),
                 children: [
                   TileLayer(

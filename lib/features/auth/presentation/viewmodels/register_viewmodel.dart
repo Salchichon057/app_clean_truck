@@ -16,16 +16,26 @@ class RegisterViewModel extends StateNotifier<AsyncValue<void>> {
 
   Future<void> submit() async {
     final formState = _ref.read(registerFormProvider);
+    
+    // Validación inicial
     if (!formState.isValid || formState.location == null) {
       _ref.read(registerFormProvider.notifier).state = formState.copyWith(
         errorMessage: formState.location == null
             ? 'Debes seleccionar una ubicación'
             : 'Formulario inválido',
+        isSubmitting: false,
       );
       return;
     }
 
+    // Marcar como submitting
+    _ref.read(registerFormProvider.notifier).state = formState.copyWith(
+      isSubmitting: true,
+      errorMessage: null,
+    );
+    
     state = const AsyncValue.loading();
+    
     try {
       final appUser = AppUser(
         uid: '',
@@ -47,25 +57,36 @@ class RegisterViewModel extends StateNotifier<AsyncValue<void>> {
         dni: formState.dni.value,
       );
 
+      print('Iniciando registro para: ${appUser.email}');
+      
       await _authRepository.register(
         formState.email.value,
         formState.password.value,
         appUser,
       );
 
+      print('Registro completado exitosamente');
+      
+      // Limpiar formulario y estado solo en éxito
       _ref.read(registerFormProvider.notifier).state = RegisterFormState();
       state = const AsyncValue.data(null);
+      
     } on AuthException catch (e) {
+      print('AuthException en submit: ${e.message}');
       // Error de autenticación con mensaje user-friendly
       state = AsyncValue.error(e, StackTrace.current);
       _ref.read(registerFormProvider.notifier).state = formState.copyWith(
         errorMessage: e.message,
         isSubmitting: false,
       );
-    } catch (e) {
+    } catch (e, st) {
+      print('Error inesperado en submit: $e');
+      print('StackTrace: $st');
       // Error genérico
-      final authError = AuthException.generic('Error inesperado al registrar usuario');
-      state = AsyncValue.error(authError, StackTrace.current);
+      final authError = AuthException.generic(
+        'Error inesperado al registrar usuario. Intenta de nuevo'
+      );
+      state = AsyncValue.error(authError, st);
       _ref.read(registerFormProvider.notifier).state = formState.copyWith(
         errorMessage: authError.message,
         isSubmitting: false,

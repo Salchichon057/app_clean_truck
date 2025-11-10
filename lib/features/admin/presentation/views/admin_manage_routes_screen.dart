@@ -25,7 +25,9 @@ class _AdminManageRoutesScreenState
   final List<Location> _points = [];
   final List<String> _addresses = [];
   final TextEditingController _routeNameController = TextEditingController();
+  final MapController _mapController = MapController();
   String? _selectedTruckId;
+  bool _isMapReady = false;
 
   bool get _canSave =>
       _routeNameController.text.trim().isNotEmpty &&
@@ -59,6 +61,7 @@ class _AdminManageRoutesScreenState
   @override
   void dispose() {
     _routeNameController.dispose();
+    _mapController.dispose();
     super.dispose();
   }
 
@@ -240,20 +243,63 @@ class _AdminManageRoutesScreenState
                       initialCenter = const LatLng(-11.9498, -77.0622);
                     }
 
-                    return FlutterMap(
-                      options: MapOptions(
-                        initialCenter: initialCenter,
-                        initialZoom: 14,
-                        onTap: (tapPosition, latLng) => _addPoint(latLng),
-                      ),
+                    return Stack(
                       children: [
-                        TileLayer(
-                          urlTemplate:
-                              'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
+                        FlutterMap(
+                          mapController: _mapController,
+                          options: MapOptions(
+                            initialCenter: initialCenter,
+                            initialZoom: 14,
+                            onTap: (tapPosition, latLng) {
+                              if (_isMapReady) {
+                                _addPoint(latLng);
+                              }
+                            },
+                            onMapReady: () {
+                              setState(() {
+                                _isMapReady = true;
+                              });
+                              // Forzar renderizado con un pequeño movimiento
+                              Future.delayed(const Duration(milliseconds: 100), () {
+                                if (mounted) {
+                                  _mapController.move(initialCenter, 14);
+                                }
+                              });
+                            },
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate:
+                                  'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
+                            ),
+                            if (_points.length > 1)
+                              PolylineLayer(polylines: [polyline]),
+                            MarkerLayer(markers: markers),
+                          ],
                         ),
-                        if (_points.length > 1)
-                          PolylineLayer(polylines: [polyline]),
-                        MarkerLayer(markers: markers),
+                        if (!_isMapReady)
+                          Container(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            child: const Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircularProgressIndicator(
+                                    color: AppTheme.primary,
+                                  ),
+                                  SizedBox(height: 12),
+                                  Text(
+                                    'Cargando mapa...',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: AppTheme.primary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                       ],
                     );
                   },

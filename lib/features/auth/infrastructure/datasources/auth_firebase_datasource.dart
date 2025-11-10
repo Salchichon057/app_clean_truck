@@ -8,6 +8,9 @@ import '../../domain/repositories/auth_repository.dart';
 class AuthFirebaseDatasource implements AuthRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
+  // Timeout para operaciones Firebase
+  static const Duration _operationTimeout = Duration(seconds: 15);
 
   @override
   Future<String?> signIn(String email, String password) async {
@@ -44,23 +47,52 @@ class AuthFirebaseDatasource implements AuthRepository {
     AppUser appUserData,
   ) async {
     try {
+      // Crear usuario con timeout
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
+      ).timeout(
+        _operationTimeout,
+        onTimeout: () {
+          throw AuthException.generic(
+            'Tiempo de espera agotado. Verifica tu conexión e intenta de nuevo'
+          );
+        },
       );
+      
       final uid = userCredential.user?.uid;
 
       if (uid != null) {
         final userMap = AppUserMapper.toJson(appUserData.copyWith(uid: uid));
-        print('Mapa a guardar en Firestore: $userMap');
-        await _firestore.collection('app_users').doc(uid).set(userMap);
+        print('Guardando usuario en Firestore: ${appUserData.email}');
+        
+        // Guardar en Firestore con timeout
+        await _firestore
+            .collection('app_users')
+            .doc(uid)
+            .set(userMap)
+            .timeout(
+              _operationTimeout,
+              onTimeout: () {
+                throw AuthException.generic(
+                  'Timeout al guardar datos. El usuario fue creado pero falló el registro completo'
+                );
+              },
+            );
+        
+        print('Usuario registrado exitosamente: $uid');
         return uid;
       }
       return null;
     } on FirebaseAuthException catch (e) {
+      print('FirebaseAuthException en register: ${e.code} - ${e.message}');
       throw AuthException.fromFirebaseAuth(e);
+    } on AuthException {
+      // Re-lanzar AuthException que ya están formateadas
+      rethrow;
     } catch (e) {
-      throw AuthException.generic('Error inesperado al registrar usuario');
+      print('Error inesperado en register: $e');
+      throw AuthException.generic('Error inesperado al registrar usuario: ${e.toString()}');
     }
   }
 

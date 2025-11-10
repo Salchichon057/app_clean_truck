@@ -1,4 +1,3 @@
-import 'package:comaslimpio/features/truck_drive/presentation/providers/truck_on_map_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:comaslimpio/features/truck_drive/presentation/providers/truck_provider.dart';
@@ -20,14 +19,42 @@ class _TruckSelectionScreenState extends ConsumerState<TruckSelectionScreen> {
     BuildContext context,
     truck,
     user,
+    bool isCurrentlySelected,
   ) async {
+    // Validación adicional: si no está seleccionado, verificar que el usuario no tenga otro camión
+    if (!isCurrentlySelected) {
+      final trucksAsync = ref.read(availableAndMyTruckStreamProvider);
+      final hasAnotherTruck = await trucksAsync.when(
+        data: (trucks) async {
+          return trucks.any((t) => t.idAppUser == user.uid && t.idTruck != truck.idTruck);
+        },
+        loading: () async => false,
+        error: (_, __) async => false,
+      );
+      
+      if (hasAnotherTruck) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Ya tienes un camión seleccionado. Deselecciónalo primero.'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
+      }
+    }
+    
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Confirmar selección'),
+        title: Text(isCurrentlySelected ? 'Deseleccionar camión' : 'Confirmar selección'),
         content: Text(
-          '¿Deseas seleccionar el camión ${truck.brand} ${truck.model} (Placa: ${truck.idTruck})?',
+          isCurrentlySelected
+              ? '¿Deseas deseleccionar el camión ${truck.brand} ${truck.model} (Placa: ${truck.idTruck})?'
+              : '¿Deseas seleccionar el camión ${truck.brand} ${truck.model} (Placa: ${truck.idTruck})?',
         ),
         actions: [
           TextButton(
@@ -36,7 +63,7 @@ class _TruckSelectionScreenState extends ConsumerState<TruckSelectionScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primary,
+              backgroundColor: isCurrentlySelected ? Colors.orange : AppTheme.primary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               shape: RoundedRectangleBorder(
@@ -44,17 +71,80 @@ class _TruckSelectionScreenState extends ConsumerState<TruckSelectionScreen> {
               ),
             ),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Confirmar'),
+            child: Text(isCurrentlySelected ? 'Deseleccionar' : 'Confirmar'),
           ),
         ],
       ),
     );
+    
     if (confirmed == true && user != null) {
       final truckNotifier = ref.read(truckViewModelProvider.notifier);
-      await truckNotifier.updateTruck(
-        truck.copyWith(idAppUser: user.uid, status: 'unavailable'),
-      );
-      await Future.delayed(const Duration(milliseconds: 300));
+      
+      if (isCurrentlySelected) {
+        // Deseleccionar: liberar el camión
+        await truckNotifier.updateTruck(
+          truck.copyWith(idAppUser: null, status: 'available'),
+        );
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Camión deseleccionado correctamente'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        // Seleccionar nuevo: SIEMPRE liberar todos los camiones del usuario primero
+        final trucksAsync = ref.read(availableAndMyTruckStreamProvider);
+        
+        await trucksAsync.when(
+          data: (trucks) async {
+            // Liberar TODOS los camiones que tenga el usuario asignados
+            final myTrucks = trucks.where((t) => t.idAppUser == user.uid).toList();
+            
+            for (final previousTruck in myTrucks) {
+              await truckNotifier.updateTruck(
+                previousTruck.copyWith(idAppUser: null, status: 'available'),
+              );
+            }
+            
+            // Esperar a que se actualice en Firestore
+            if (myTrucks.isNotEmpty) {
+              await Future.delayed(const Duration(milliseconds: 800));
+            }
+            
+            // Ahora seleccionar el nuevo camión
+            await truckNotifier.updateTruck(
+              truck.copyWith(idAppUser: user.uid, status: 'unavailable'),
+            );
+            
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Camión seleccionado correctamente'),
+                  backgroundColor: Colors.green,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+          loading: () async {},
+          error: (e, _) async {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+        );
+      }
+      
+      await Future.delayed(const Duration(milliseconds: 600));
       if (mounted && Navigator.of(context).canPop()) {
         context.pop();
       }
@@ -79,11 +169,15 @@ class _TruckSelectionScreenState extends ConsumerState<TruckSelectionScreen> {
           }
 
           // Encuentra el camión asignado al usuario actual
-          final myTruckId = user == null
-              ? null
-              : trucks
-                    .firstWhereOrNull((t) => t.idAppUser == user.uid)
-                    ?.idTruck;
+          String? myTruckId;
+          if (user != null) {
+            for (final truck in trucks) {
+              if (truck.idAppUser == user.uid) {
+                myTruckId = truck.idTruck;
+                break;
+              }
+            }
+          }
 
           // Si hay uno seleccionado, lo llevamos arriba
           final sortedTrucks = [...trucks];
@@ -102,29 +196,47 @@ class _TruckSelectionScreenState extends ConsumerState<TruckSelectionScreen> {
             itemBuilder: (context, index) {
               final truck = sortedTrucks[index];
               final isSelected = user != null && truck.idAppUser == user.uid;
+              
+              // Si hay un camión seleccionado Y no es este, está deshabilitado
+              final isDisabled = myTruckId != null && myTruckId.isNotEmpty && !isSelected;
 
-              return Card(
-                elevation: isSelected ? 3 : 2,
-                color: null,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: isSelected
-                      ? BorderSide(color: AppTheme.primary, width: 2)
-                      : BorderSide.none,
-                ),
-                child: ListTile(
-                  leading: Icon(
-                    Icons.local_shipping,
-                    color: AppTheme.primary.withValues(alpha: 0.8),
+              return Opacity(
+                opacity: isDisabled ? 0.4 : 1.0,
+                child: Card(
+                  elevation: isSelected ? 3 : 2,
+                  color: isDisabled ? Colors.grey[300] : null,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: isSelected
+                        ? BorderSide(color: AppTheme.primary, width: 2)
+                        : BorderSide.none,
                   ),
-                  title: Text('${truck.brand} ${truck.model}'),
-                  subtitle: Text('Placa: ${truck.idTruck}'),
-                  onTap: user == null
-                      ? null
-                      : () => _showConfirmationDialog(context, truck, user),
-                  trailing: isSelected
-                      ? const Icon(Icons.check_circle, color: AppTheme.tertiary)
-                      : null,
+                  child: ListTile(
+                    leading: Icon(
+                      Icons.local_shipping,
+                      color: isDisabled 
+                          ? Colors.grey
+                          : AppTheme.primary.withValues(alpha: 0.8),
+                    ),
+                    title: Text(
+                      '${truck.brand} ${truck.model}',
+                      style: TextStyle(
+                        color: isDisabled ? Colors.grey : null,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Placa: ${truck.idTruck}',
+                      style: TextStyle(
+                        color: isDisabled ? Colors.grey : null,
+                      ),
+                    ),
+                    onTap: user == null || isDisabled
+                        ? null
+                        : () => _showConfirmationDialog(context, truck, user, isSelected),
+                    trailing: isSelected
+                        ? const Icon(Icons.check_circle, color: AppTheme.tertiary)
+                        : null,
+                  ),
                 ),
               );
             },

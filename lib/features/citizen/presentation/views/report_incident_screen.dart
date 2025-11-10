@@ -345,6 +345,17 @@ class _IncidentLocationEditModalState extends State<IncidentLocationEditModal> {
                                 );
                               }
                             },
+                            onMapReady: () {
+                              // Forzar renderizado con un pequeño movimiento
+                              Future.delayed(const Duration(milliseconds: 100), () {
+                                if (mounted) {
+                                  _mapController.move(
+                                    LatLng(_selectedLocation.lat, _selectedLocation.long),
+                                    17,
+                                  );
+                                }
+                              });
+                            },
                           ),
                           children: [
                             TileLayer(

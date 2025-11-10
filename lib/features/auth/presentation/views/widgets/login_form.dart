@@ -53,7 +53,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             onChanged: notifier.onEmailChanged,
             decoration: _inputDecoration(
               hint: 'juan.perez@example.com',
-              error: state.isFormPosted ? state.email.errorMessage : null,
+              error: state.email.errorMessage,
             ),
           ),
           const SizedBox(height: 16),
@@ -66,6 +66,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             onChanged: notifier.onPasswordChanged,
             decoration: _inputDecoration(
               hint: 'Ingresa tu contraseña',
+              error: state.password.errorMessage,
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -89,7 +90,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              onPressed: state.isPosting
+              onPressed: (state.isPosting || !state.isValid)
                   ? null
                   : () async {
                       final result = await notifier.onFormSubmit();
@@ -97,7 +98,9 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                       if (!result) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Error al iniciar sesión'),
+                            content: Text('Correo o contraseña incorrectos'),
+                            backgroundColor: Colors.red,
+                            duration: Duration(seconds: 3),
                           ),
                         );
                       }

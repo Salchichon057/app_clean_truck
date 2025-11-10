@@ -33,7 +33,7 @@ class Truck {
     String? engineNumber,
     String? vehicleType,
     String? status,
-    String? idAppUser,
+    Object? idAppUser = const _Undefined(),
   }) {
     return Truck(
       idTruck: idTruck ?? this.idTruck,
@@ -45,7 +45,11 @@ class Truck {
       engineNumber: engineNumber ?? this.engineNumber,
       vehicleType: vehicleType ?? this.vehicleType,
       status: status ?? this.status,
-      idAppUser: idAppUser ?? this.idAppUser,
+      idAppUser: idAppUser is _Undefined ? this.idAppUser : idAppUser as String?,
     );
   }
+}
+
+class _Undefined {
+  const _Undefined();
 }
