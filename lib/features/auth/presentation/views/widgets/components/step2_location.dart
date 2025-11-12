@@ -28,6 +28,10 @@ class Step2Location extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final formState = ref.watch(registerFormProvider);
+    final hasLocationError = formState.errorMessage != null && 
+                             formState.errorMessage!.contains('ubicación');
+    
     return Column(
       children: [
         _inputLabel('Dirección'),
@@ -35,7 +39,10 @@ class Step2Location extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
+            border: Border.all(
+              color: hasLocationError ? const Color(0xFFD32F2F) : Colors.grey,
+              width: hasLocationError ? 2 : 1,
+            ),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -46,14 +53,36 @@ class Step2Location extends ConsumerWidget {
                   addressController.text.isEmpty
                       ? 'Mueve el mapa para seleccionar una dirección'
                       : addressController.text,
-                  style: TextStyle(color: Colors.grey[600]),
+                  style: TextStyle(
+                    color: hasLocationError 
+                        ? const Color(0xFFD32F2F) 
+                        : Colors.grey[600],
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const Icon(Icons.location_on, color: Colors.grey),
+              Icon(
+                Icons.location_on, 
+                color: hasLocationError ? const Color(0xFFD32F2F) : Colors.grey,
+              ),
             ],
           ),
         ),
+        if (hasLocationError)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                formState.errorMessage!,
+                style: const TextStyle(
+                  color: Color(0xFFD32F2F),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+          ),
         const SizedBox(height: 16),
         const Text(
           'Ubicación',

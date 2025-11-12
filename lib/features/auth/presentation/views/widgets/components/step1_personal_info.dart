@@ -34,7 +34,7 @@ class Step1PersonalInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _InputLabel('Nombre'),
+        _InputLabel('Nombre *'),
         const SizedBox(height: 4),
         TextField(
           controller: nameController,
@@ -58,7 +58,7 @@ class Step1PersonalInfo extends StatelessWidget {
 
         const SizedBox(height: 16),
 
-        _InputLabel('Apellido'),
+        _InputLabel('Apellido *'),
         const SizedBox(height: 4),
         TextField(
           controller: lastNameController,
@@ -82,7 +82,7 @@ class Step1PersonalInfo extends StatelessWidget {
 
         const SizedBox(height: 16),
 
-        _InputLabel('DNI'),
+        _InputLabel('DNI *'),
         const SizedBox(height: 4),
         TextField(
           controller: dniController,
@@ -106,7 +106,7 @@ class Step1PersonalInfo extends StatelessWidget {
           ),
         const SizedBox(height: 16),
 
-        _InputLabel('Correo Electrónico'),
+        _InputLabel('Correo Electrónico *'),
         const SizedBox(height: 4),
         TextField(
           controller: emailController,
@@ -131,7 +131,7 @@ class Step1PersonalInfo extends StatelessWidget {
 
         const SizedBox(height: 16),
 
-        _InputLabel('Contraseña'),
+        _InputLabel('Contraseña *'),
         const SizedBox(height: 4),
         TextField(
           controller: passwordController,
@@ -164,7 +164,7 @@ class Step1PersonalInfo extends StatelessWidget {
 
         const SizedBox(height: 16),
 
-        _InputLabel('Confirmar Contraseña'),
+        _InputLabel('Confirmar Contraseña *'),
         const SizedBox(height: 4),
         TextField(
           controller: confirmPasswordController,

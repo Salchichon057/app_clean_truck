@@ -39,7 +39,6 @@ class _RegisterFormState extends ConsumerState<RegisterForm> with WidgetsBinding
   bool _obscureConfirmPassword = true;
   final MapController _mapController = MapController();
   bool _isProgrammaticChange = false;
-  bool _isLocationInitialized = false;
 
   @override
   void initState() {
@@ -82,20 +81,11 @@ class _RegisterFormState extends ConsumerState<RegisterForm> with WidgetsBinding
           .updateConfirmPassword(_confirmPasswordController.text.trim());
     });
 
-    if (!_isLocationInitialized) {
-      // Diferir la inicialización hasta después del build
-      Future(() async {
-        final mapLocationNotifier = ref.read(mapLocationProvider.notifier);
-        await mapLocationNotifier.initLocation();
-        final mapLocationState = ref.read(mapLocationProvider);
-        // Solo auto-confirmar si tenemos ubicación Y permisos concedidos
-        if (mapLocationState.currentLocation != null && 
-            mapLocationState.permissionStatus == LocationPermissionStatus.granted) {
-          _confirmLocation();
-          _isLocationInitialized = true;
-        }
-      });
-    }
+    // Inicializar ubicación pero NO auto-confirmar
+    Future(() async {
+      final mapLocationNotifier = ref.read(mapLocationProvider.notifier);
+      await mapLocationNotifier.initLocation();
+    });
   }
 
   @override
@@ -103,10 +93,11 @@ class _RegisterFormState extends ConsumerState<RegisterForm> with WidgetsBinding
     super.didChangeAppLifecycleState(state);
     
     // Cuando la app regresa al primer plano, verificar permisos nuevamente
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed && mounted) {
       Future(() async {
         final mapLocationNotifier = ref.read(mapLocationProvider.notifier);
         await mapLocationNotifier.refreshPermissions();
+        // NO auto-confirmar, dejar que el usuario lo haga manualmente
       });
     }
   }
@@ -222,9 +213,9 @@ class _RegisterFormState extends ConsumerState<RegisterForm> with WidgetsBinding
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
+                      color: Colors.red.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.withOpacity(0.3)),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [

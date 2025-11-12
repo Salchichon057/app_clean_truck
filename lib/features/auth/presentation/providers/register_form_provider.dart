@@ -199,8 +199,31 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
     state = state.copyWith(nighttimeEnd: value);
   }
 
+  void validateCurrentStepFields() {
+    if (state.step == 0) {
+      // Marcar todos los campos del step 0 como dirty
+      state = state.copyWith(
+        name: FullName.dirty(state.name.value),
+        lastName: FullName.dirty(state.lastName.value),
+        dni: Dni.dirty(state.dni.value),
+        email: Email.dirty(state.email.value),
+        password: Password.dirty(state.password.value),
+        confirmPassword: ConfirmPassword.dirty(
+          original: state.password.value,
+          value: state.confirmPassword.value,
+        ),
+        isValid: _isFormValid(),
+      );
+    }
+    // Step 1 (location) no tiene campos de input, solo selección de mapa
+  }
+
   String? nextStep() {
     if (state.step < 2) {
+      // Primero marcar campos como dirty para mostrar errores
+      validateCurrentStepFields();
+      
+      // Luego validar
       final error = _validateStep();
       if (error != null) {
         state = state.copyWith(errorMessage: error);
