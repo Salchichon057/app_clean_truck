@@ -114,10 +114,13 @@ final goRouterProvider = Provider((ref) {
       ),
     ],
     redirect: (context, state) {
+      // authStatus usa caché durante checking para evitar flash de redirección
+      // cuando la app se reconstruye (minimizar/restaurar)
       final authStatus = goRouterNotifier.authStatus;
       final isGoingTo = state.matchedLocation;
-
-      if (isGoingTo == '/splash' && authStatus == AuthStatus.checking) {
+      
+      // Solo permitir splash durante checking real (primera carga)
+      if (isGoingTo == '/splash' && goRouterNotifier.isChecking) {
         return null;
       }
 
